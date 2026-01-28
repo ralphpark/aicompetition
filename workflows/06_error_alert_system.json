@@ -1,0 +1,37 @@
+{
+  "id": "s90lTAdKG3PBwk39",
+  "name": "6. Error Alert System",
+  "active": false,
+  "nodes": [
+    {
+      "id": "error_trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {}
+    },
+    {
+      "id": "format_error",
+      "name": "Format Error Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [224, 0],
+      "parameters": {"jsCode": "const errorData = $input.first().json;\nconst workflowName = errorData.workflow?.name || 'Unknown';\nconst errorMessage = errorData.execution?.error?.message || 'No error message';\nconst errorNode = errorData.execution?.error?.node?.name || 'Unknown';\nconst executionId = errorData.execution?.id || 'N/A';\nconst workflowEmojis = {'0': '🔑', '1': '📊', '2': '🤖', '3': '💼', '4': '⚡', '5': '⏰', '6': '🚨'};\nconst emoji = workflowEmojis[workflowName.charAt(0)] || '⚠️';\nlet errorType = 'UNKNOWN', severity = 'MEDIUM';\nconst el = errorMessage.toLowerCase();\nif (el.includes('credit') || el.includes('quota') || el.includes('429')) { errorType = 'CREDIT_BILLING'; severity = 'CRITICAL'; }\nelse if (el.includes('timeout')) { errorType = 'TIMEOUT'; severity = 'LOW'; }\nelse if (el.includes('auth') || el.includes('401') || el.includes('403')) { errorType = 'AUTH'; severity = 'HIGH'; }\nconst severityEmoji = {'CRITICAL': '🔴🔴🔴', 'HIGH': '🔴', 'MEDIUM': '🟡', 'LOW': '🟢'};\nreturn [{json: {workflowName, errorMessage: errorMessage.substring(0,300), errorNode, executionId, emoji, errorType, severity, severityEmoji: severityEmoji[severity], errorTimestamp: new Date().toISOString()}}];"}
+    },
+    {
+      "id": "send_telegram",
+      "name": "Send Telegram Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [448, 0],
+      "parameters": {"method": "POST", "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage", "sendHeaders": true, "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]}, "sendBody": true, "specifyBody": "json", "jsonBody": "={{ JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: '🚨 <b>WORKFLOW ERROR</b>\\n\\n' + $json.emoji + ' <b>' + $json.workflowName + '</b>\\n' + $json.severityEmoji + ' Severity: ' + $json.severity + '\\n❌ Node: ' + $json.errorNode + '\\n📝 ' + $json.errorMessage}) }}"},
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "On Error": {"main": [[{"node": "Format Error Message", "type": "main", "index": 0}]]},
+    "Format Error Message": {"main": [[{"node": "Send Telegram Alert", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}

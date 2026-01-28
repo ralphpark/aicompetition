@@ -1,0 +1,401 @@
+{
+  "id": "uf0rOZGoYuCKhMek",
+  "name": "3. Virtual Portfolio Manager",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {"inputSource": "passthrough"},
+      "id": "trigger",
+      "name": "Called by AI Decision Engine",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [-144, -256],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/ai_decisions?order=created_at.desc&limit=12",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"},
+            {"name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "get_decisions",
+      "name": "Get Latest Decisions",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [-128, 0],
+      "typeVersion": 4.3,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "https://fapi.binance.com/fapi/v1/ticker/price",
+        "sendQuery": true,
+        "queryParameters": {"parameters": [{"name": "symbol", "value": "BTCUSDT"}]},
+        "options": {}
+      },
+      "id": "get_price",
+      "name": "Get Current Price",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [256, 0],
+      "typeVersion": 4.3,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/market_data?symbol=eq.BTCUSD&order=timestamp.desc&limit=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"},
+            {"name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "get_market_data",
+      "name": "Get Market Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [464, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_portfolios?select=*,ai_models(name)",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"},
+            {"name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "get_portfolios",
+      "name": "Get Portfolios",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [672, 0],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_positions?status=eq.OPEN",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"},
+            {"name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "get_positions",
+      "name": "Get Open Positions",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [880, 0],
+      "typeVersion": 4.3,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Virtual Portfolio Manager v4.0: R:R 1.5 minimum, RANGING market filter, weighted champion\nconst items = $input.all();\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\nconst BASE_URL = 'https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1';\nconst headers = { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY };\n\nconst decisionsRes = await this.helpers.httpRequest({ method: 'GET', url: BASE_URL + '/ai_decisions?order=created_at.desc&limit=12', headers: headers, json: true });\nconst decisions = (decisionsRes || []).filter(function(d) { return d && d.id; });\n\nconst portfoliosRes = await this.helpers.httpRequest({ method: 'GET', url: BASE_URL + '/virtual_portfolios?select=*,ai_models(name)', headers: headers, json: true });\nconst portfolioMap = new Map();\nfor (var i = 0; i < (portfoliosRes || []).length; i++) { var p = portfoliosRes[i]; if (p && p.id && !portfolioMap.has(p.id)) portfolioMap.set(p.id, p); }\nconst portfolios = Array.from(portfolioMap.values());\n\nconst positionsRes = await this.helpers.httpRequest({ method: 'GET', url: BASE_URL + '/virtual_positions?status=eq.OPEN', headers: headers, json: true });\nconst positionMap = new Map();\nfor (var j = 0; j < (positionsRes || []).length; j++) { var pos = positionsRes[j]; if (pos && pos.id && !positionMap.has(pos.id)) positionMap.set(pos.id, pos); }\nconst positions = Array.from(positionMap.values());\n\nconst marketRes = await this.helpers.httpRequest({ method: 'GET', url: BASE_URL + '/market_data?symbol=eq.BTCUSD&order=timestamp.desc&limit=1', headers: headers, json: true });\nconst marketData = (marketRes && marketRes[0]) ? marketRes[0] : {};\n\nconst priceRes = await this.helpers.httpRequest({ method: 'GET', url: 'https://fapi.binance.com/fapi/v1/ticker/price?symbol=BTCUSDT', json: true });\nconst currentPrice = parseFloat(priceRes && priceRes.price ? priceRes.price : 0) || 0;\n\nvar finalOutput = [{ json: { operation: 'NONE', reason: 'No price', skipped: [] } }];\n\nif (currentPrice > 0) {\n  var bbU = parseFloat(marketData.bb_upper)||0, bbL = parseFloat(marketData.bb_lower)||0, bbM = parseFloat(marketData.bb_middle)||0;\n  var bbPos = 'MIDDLE'; if (currentPrice > bbU) bbPos = 'ABOVE_UPPER'; else if (currentPrice < bbL) bbPos = 'BELOW_LOWER'; else if (currentPrice > bbM) bbPos = 'UPPER'; else if (currentPrice < bbM) bbPos = 'LOWER';\n  var ema20 = parseFloat(marketData.ema_20)||0, ema50 = parseFloat(marketData.ema_50)||0;\n  var emaPos = 'BETWEEN'; if (currentPrice > ema20 && currentPrice > ema50) emaPos = 'ABOVE_BOTH'; else if (currentPrice < ema20 && currentPrice < ema50) emaPos = 'BELOW_BOTH';\n  \n  // ========== v4.0: Get actual market_state from market_data ==========\n  var actualMarketState = marketData.market_state || 'RANGING';\n  var adx = parseFloat(marketData.adx) || 0;\n  // ========== END v4.0 ==========\n  \n  var indicators = { entry_rsi: parseFloat(marketData.rsi)||null, entry_rsi_1h: parseFloat(marketData.rsi_1h)||null, entry_rsi_4h: parseFloat(marketData.rsi_4h)||null, entry_macd: parseFloat(marketData.macd)||null, entry_macd_signal: parseFloat(marketData.macd_signal)||null, entry_macd_histogram: parseFloat(marketData.macd_histogram)||null, entry_bb_position: bbPos, entry_funding_rate: parseFloat(marketData.funding_rate)||null, entry_oi_change: parseFloat(marketData.open_interest_change)||null, entry_long_short_ratio: parseFloat(marketData.long_short_ratio)||null, entry_volume_24h: parseFloat(marketData.volume_24h)||null, entry_atr: parseFloat(marketData.atr)||null, entry_ema_position: emaPos, entry_trend: marketData.trend_1h||null, entry_market_state: actualMarketState, entry_adx: adx };\n  \n  // ========== v4.0: New constants for R:R and position sizing ==========\n  var MAX_POS = 0.05, MIN_POS = 0.01, MIN_TP = 360, MIN_SL = 240;\n  var MIN_RR_RATIO = 1.5;  // Minimum Risk:Reward ratio\n  var now = new Date(), results = [], skippedList = [], processedPositions = new Set(), processedDecisionIds = new Set();\n  \n  for (var k = 0; k < positions.length; k++) {\n    var ps = positions[k];\n    if (ps.status !== 'OPEN' || processedPositions.has(ps.id)) continue;\n    var ep = parseFloat(ps.entry_price)||0, tp = parseFloat(ps.take_profit)||0, sl = parseFloat(ps.stop_loss)||0, qty = parseFloat(ps.quantity)||0, lev = ps.leverage||5, side = ps.side;\n    var hitType = null, closePrice = currentPrice;\n    if (side === 'LONG') { if (tp > 0 && tp > ep && currentPrice >= tp) { hitType = 'TP'; closePrice = tp; } else if (sl > 0 && sl < ep && currentPrice <= sl) { hitType = 'SL'; closePrice = sl; } }\n    else if (side === 'SHORT') { if (tp > 0 && tp < ep && currentPrice <= tp) { hitType = 'TP'; closePrice = tp; } else if (sl > 0 && sl > ep && currentPrice >= sl) { hitType = 'SL'; closePrice = sl; } }\n    if (hitType) {\n      var pnl = side === 'LONG' ? (closePrice - ep) * qty * lev : (ep - closePrice) * qty * lev;\n      var port = portfolios.find(function(x) { return x.model_id === ps.model_id; }); if (!port) continue;\n      var mname = (port.ai_models && port.ai_models.name) ? port.ai_models.name : 'Unknown', bal = parseFloat(port.current_balance) || 10000;\n      results.push({ operation: 'CLOSE_POSITION', position_id: ps.id, model_id: ps.model_id, model_name: mname, portfolio_id: port.id, side: side, status: 'CLOSED', closed_at: new Date().toISOString(), close_price: closePrice, realized_pnl: pnl, pnl: pnl, is_win: pnl > 0, new_balance: bal + pnl, newBalance: bal + pnl, new_realized_pnl: (parseFloat(port.realized_pnl)||0) + pnl, new_total_trades: (port.total_trades||0) + 1, new_winning_trades: (port.winning_trades||0) + (pnl > 0 ? 1 : 0), close_reason: hitType + '_HIT' });\n      processedPositions.add(ps.id);\n    }\n  }\n  \n  if (decisions.length > 0) {\n    var latestTime = new Date(Math.max.apply(null, decisions.map(function(d) { return new Date(d.created_at).getTime(); })));\n    var latestByModel = {};\n    for (var m = 0; m < decisions.length; m++) { var d = decisions[m]; var dt = new Date(d.created_at); if ((latestTime - dt) / 60000 <= 2) { if (!latestByModel[d.model_id]) latestByModel[d.model_id] = d; } }\n    var processedModels = new Set();\n    var modelIds = Object.keys(latestByModel);\n    for (var n = 0; n < modelIds.length; n++) {\n      var model_id = modelIds[n];\n      if (processedModels.has(model_id)) continue;\n      var dec = latestByModel[model_id];\n      var action = dec.action, confidence = dec.confidence, stop_loss = dec.stop_loss, take_profit = dec.take_profit, position_size = dec.position_size, created_at = dec.created_at, decision_id = dec.id;\n      if (processedDecisionIds.has(decision_id)) continue;\n      var port2 = portfolios.find(function(x) { return x.model_id === model_id; });\n      var mname2 = (port2 && port2.ai_models && port2.ai_models.name) ? port2.ai_models.name : 'Unknown';\n      var dt2 = new Date(created_at); if ((now - dt2) / 60000 > 5) { skippedList.push({ model_name: mname2, action: action, reason: 'Too old' }); continue; }\n      if (action === 'NO_ACTION' || action === 'HOLD') { skippedList.push({ model_name: mname2, action: action, confidence: confidence, reason: 'NO_ACTION' }); continue; }\n      var mpos = positions.filter(function(x) { return x.model_id === model_id && x.status === 'OPEN' && !processedPositions.has(x.id); });\n      if (!port2) { skippedList.push({ model_name: mname2, action: action, reason: 'No portfolio' }); continue; }\n      var bal2 = parseFloat(port2.current_balance) || 10000;\n      \n      // ========== v3.8: Check if this model is champion ==========\n      var isChampion = port2.is_champion === true;\n      // ========== END v3.8 ==========\n      \n      var isOpenLong = action === 'OPEN_LONG' || action === 'LONG';\n      var isOpenShort = action === 'OPEN_SHORT' || action === 'SHORT';\n      if (isOpenLong || isOpenShort) {\n        if (mpos.length >= 4) { skippedList.push({ model_name: mname2, action: action, reason: 'Max pos' }); continue; }\n        var tgtSide = isOpenLong ? 'LONG' : 'SHORT';\n        if (mpos.filter(function(x) { return x.side === tgtSide; }).length >= 1) { skippedList.push({ model_name: mname2, action: action, reason: 'Has ' + tgtSide }); continue; }\n        \n        // ========== v4.0: RANGING market filter ==========\n        var qty2 = Math.max(MIN_POS, Math.min(MAX_POS, position_size || 0.02));\n        if (actualMarketState === 'RANGING') {\n          if (adx < 20) {\n            skippedList.push({ model_name: mname2, action: action, reason: 'RANGING market (ADX=' + adx.toFixed(1) + ' < 20)' });\n            continue;\n          }\n          qty2 = qty2 * 0.5;  // Reduce position size by 50% in ranging market\n        }\n        if (actualMarketState === 'HIGH_VOLATILITY') {\n          qty2 = qty2 * 0.5;  // Reduce position size by 50% in high volatility\n        }\n        // ========== END v4.0 RANGING filter ==========\n        \n        var fSL = parseFloat(stop_loss)||null, fTP = parseFloat(take_profit)||null, adj = false;\n        if (tgtSide === 'LONG') { var minSL = currentPrice - MIN_SL; if (!fSL || fSL >= currentPrice || (currentPrice - fSL) < MIN_SL) { fSL = minSL; adj = true; } var minTP = currentPrice + MIN_TP; if (!fTP || fTP <= currentPrice || (fTP - currentPrice) < MIN_TP) { fTP = minTP; adj = true; } }\n        else { var minSL2 = currentPrice + MIN_SL; if (!fSL || fSL <= currentPrice || (fSL - currentPrice) < MIN_SL) { fSL = minSL2; adj = true; } var minTP2 = currentPrice - MIN_TP; if (!fTP || fTP >= currentPrice || (currentPrice - fTP) < MIN_TP) { fTP = minTP2; adj = true; } }\n        \n        // ========== v4.0: Enforce minimum R:R ratio of 1.5 ==========\n        var tpDist, slDist;\n        if (tgtSide === 'LONG') {\n          tpDist = fTP - currentPrice;\n          slDist = currentPrice - fSL;\n          if (slDist > 0 && tpDist / slDist < MIN_RR_RATIO) {\n            fTP = currentPrice + (slDist * MIN_RR_RATIO);\n            adj = true;\n          }\n        } else {\n          tpDist = currentPrice - fTP;\n          slDist = fSL - currentPrice;\n          if (slDist > 0 && tpDist / slDist < MIN_RR_RATIO) {\n            fTP = currentPrice - (slDist * MIN_RR_RATIO);\n            adj = true;\n          }\n        }\n        // ========== END v4.0 R:R enforcement ==========\n        \n        fSL = Math.round(fSL * 10) / 10; fTP = Math.round(fTP * 10) / 10;\n        \n        // ========== v4.0: Final R:R validation ==========\n        var finalTpDist = tgtSide === 'LONG' ? (fTP - currentPrice) : (currentPrice - fTP);\n        var finalSlDist = tgtSide === 'LONG' ? (currentPrice - fSL) : (fSL - currentPrice);\n        var finalRR = finalSlDist > 0 ? finalTpDist / finalSlDist : 0;\n        if (finalRR < MIN_RR_RATIO) {\n          skippedList.push({ model_name: mname2, action: action, reason: 'R:R too low (' + finalRR.toFixed(2) + ' < 1.5)' });\n          continue;\n        }\n        // ========== END v4.0 R:R validation ==========\n        \n        var newPos = { operation: 'OPEN_POSITION', model_id: model_id, model_name: mname2, portfolio_id: port2.id, symbol: 'BTCUSD', side: tgtSide, quantity: qty2, entry_price: currentPrice, current_price: currentPrice, stop_loss: fSL, take_profit: fTP, leverage: 5, unrealized_pnl: 0, status: 'OPEN', decision_id: decision_id, tpsl_adjusted: adj, opened_as_champion: isChampion, entry_rr_ratio: finalRR };\n        for (var key in indicators) { newPos[key] = indicators[key]; }\n        results.push(newPos);\n        processedModels.add(model_id); processedDecisionIds.add(decision_id);\n      }\n      var isCloseLong = action === 'CLOSE_LONG' || action === 'CLOSE';\n      var isCloseShort = action === 'CLOSE_SHORT';\n      if (isCloseLong || isCloseShort) {\n        var tgtSide2 = isCloseShort ? 'SHORT' : 'LONG';\n        var ptc = mpos.find(function(x) { return x.side === tgtSide2; });\n        if (!ptc && action === 'CLOSE') { tgtSide2 = 'SHORT'; ptc = mpos.find(function(x) { return x.side === tgtSide2; }); }\n        if (!ptc) { skippedList.push({ model_name: mname2, action: action, reason: 'No pos' }); continue; }\n        if (processedPositions.has(ptc.id)) continue;\n        var ep2 = parseFloat(ptc.entry_price), qty3 = parseFloat(ptc.quantity), lev2 = ptc.leverage || 5;\n        var pnl2 = ptc.side === 'LONG' ? (currentPrice - ep2) * qty3 * lev2 : (ep2 - currentPrice) * qty3 * lev2;\n        results.push({ operation: 'CLOSE_POSITION', position_id: ptc.id, model_id: model_id, model_name: mname2, portfolio_id: port2.id, side: ptc.side, status: 'CLOSED', closed_at: new Date().toISOString(), close_price: currentPrice, realized_pnl: pnl2, pnl: pnl2, is_win: pnl2 > 0, new_balance: bal2 + pnl2, newBalance: bal2 + pnl2, new_realized_pnl: (parseFloat(port2.realized_pnl)||0) + pnl2, new_total_trades: (port2.total_trades||0) + 1, new_winning_trades: (port2.winning_trades||0) + (pnl2 > 0 ? 1 : 0), close_reason: 'AI_DECISION', decision_id: decision_id });\n        processedPositions.add(ptc.id); processedModels.add(model_id); processedDecisionIds.add(decision_id);\n      }\n    }\n  }\n  \n  if (results.length === 0) {\n    finalOutput = [{ json: { operation: 'NONE', reason: decisions.length === 0 ? 'No decisions' : 'No actionable', skipped: skippedList, currentPrice: currentPrice } }];\n  } else {\n    results[0].skipped = skippedList;\n    results[0].currentPrice = currentPrice;\n    finalOutput = [];\n    for (var q = 0; q < results.length; q++) { finalOutput.push({ json: results[q] }); }\n  }\n}\n\nreturn finalOutput;"
+      },
+      "id": "process_decisions",
+      "name": "Process Decisions",
+      "type": "n8n-nodes-base.code",
+      "position": [1104, 0],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "combinator": "or",
+          "conditions": [
+            {"id": "op_cond_open", "operator": {"type": "string", "operation": "equals"}, "leftValue": "={{ $json.operation }}", "rightValue": "OPEN_POSITION"},
+            {"id": "op_cond_close", "operator": {"type": "string", "operation": "equals"}, "leftValue": "={{ $json.operation }}", "rightValue": "CLOSE_POSITION"},
+            {"id": "op_cond_none", "operator": {"type": "string", "operation": "equals"}, "leftValue": "={{ $json.operation }}", "rightValue": "NONE"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "filter_skip",
+      "name": "Filter Skip Items",
+      "type": "n8n-nodes-base.filter",
+      "position": [1328, 0],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "combinator": "and", "conditions": [{"id": "cond1", "operator": {"name": "filter.operator.equals", "type": "string", "operation": "equals"}, "leftValue": "={{ $json.operation }}", "rightValue": "OPEN_POSITION"}]}},
+            {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "combinator": "and", "conditions": [{"id": "cond2", "operator": {"name": "filter.operator.equals", "type": "string", "operation": "equals"}, "leftValue": "={{ $json.operation }}", "rightValue": "CLOSE_POSITION"}]}},
+            {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "combinator": "and", "conditions": [{"id": "cond3", "operator": {"name": "filter.operator.equals", "type": "string", "operation": "equals"}, "leftValue": "={{ $json.operation }}", "rightValue": "NONE"}]}}
+          ]
+        },
+        "options": {"fallbackOutput": "none"}
+      },
+      "id": "switch_op",
+      "name": "Switch Operation",
+      "type": "n8n-nodes-base.switch",
+      "position": [1552, 0],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_positions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"},
+            {"name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"},
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "Prefer", "value": "return=representation"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ portfolio_id: $json.portfolio_id, model_id: $json.model_id, symbol: $json.symbol, side: $json.side, entry_price: $json.entry_price, current_price: $json.current_price, quantity: $json.quantity, leverage: $json.leverage, stop_loss: $json.stop_loss, take_profit: $json.take_profit, unrealized_pnl: 0, status: 'OPEN', decision_id: $json.decision_id, opened_as_champion: $json.opened_as_champion || false, entry_rsi: $json.entry_rsi, entry_trend: $json.entry_trend, entry_market_state: $json.entry_market_state, entry_rsi_1h: $json.entry_rsi_1h, entry_rsi_4h: $json.entry_rsi_4h, entry_macd: $json.entry_macd, entry_macd_signal: $json.entry_macd_signal, entry_macd_histogram: $json.entry_macd_histogram, entry_bb_position: $json.entry_bb_position, entry_funding_rate: $json.entry_funding_rate, entry_oi_change: $json.entry_oi_change, entry_long_short_ratio: $json.entry_long_short_ratio, entry_volume_24h: $json.entry_volume_24h, entry_atr: $json.entry_atr, entry_ema_position: $json.entry_ema_position }) }}",
+        "options": {}
+      },
+      "id": "create_position",
+      "name": "Create Position",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1760, -208],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => {\n  const d = $('Switch Operation').item.json;\n  const side = d.side;\n  const sideIcon = side === 'LONG' ? '🟢' : '🔴';\n  const adjusted = d.tpsl_adjusted ? ' ⚠️(Adjusted)' : '';\n  \n  const tpDist = side === 'LONG' \n    ? (d.take_profit - d.entry_price).toFixed(0)\n    : (d.entry_price - d.take_profit).toFixed(0);\n  const slDist = side === 'LONG'\n    ? (d.entry_price - d.stop_loss).toFixed(0)\n    : (d.stop_loss - d.entry_price).toFixed(0);\n  \n  const msg = '📈 <b>Virtual Position Opened</b>' + adjusted + '\\n\\n' +\n    '🤖 Model: <b>' + (d.model_name || 'Unknown') + '</b>\\n' +\n    sideIcon + ' ' + side + '\\n' +\n    'Entry: $' + Math.round(d.entry_price) + '\\n' +\n    'Size: ' + d.quantity + ' BTC (5x)\\n\\n' +\n    '🛑 SL: $' + Math.round(d.stop_loss) + ' (-$' + slDist + ')\\n' +\n    '🎯 TP: $' + Math.round(d.take_profit) + ' (+$' + tpDist + ')\\n' +\n    'R:R = 1:' + (tpDist / slDist).toFixed(1);\n  \n  return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n})() }}",
+        "options": {}
+      },
+      "id": "tg_open",
+      "name": "Telegram Open",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1984, -208],
+      "typeVersion": 4.3,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\n\nfor (const item of items) {\n  const data = item.json;\n  if (!data.position_id) continue;\n  \n  try {\n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_positions?id=eq.${data.position_id}`,\n      headers: {\n        'apikey': API_KEY,\n        'Authorization': `Bearer ${API_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: {\n        status: data.status,\n        closed_at: data.closed_at,\n        close_price: data.close_price,\n        realized_pnl: data.realized_pnl\n      },\n      json: true\n    });\n    results.push({ json: { ...data, updated: true } });\n  } catch (e) {\n    results.push({ json: { ...data, error: e.message } });\n  }\n}\n\nreturn results.length > 0 ? results : [{ json: { skip: true } }];"
+      },
+      "id": "close_position",
+      "name": "Close Position",
+      "type": "n8n-nodes-base.code",
+      "position": [1760, 0],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\n\nfor (const item of items) {\n  const data = item.json;\n  if (!data.portfolio_id) continue;\n  \n  try {\n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_portfolios?id=eq.${data.portfolio_id}`,\n      headers: {\n        'apikey': API_KEY,\n        'Authorization': `Bearer ${API_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: {\n        current_balance: data.new_balance,\n        realized_pnl: data.new_realized_pnl,\n        total_trades: data.new_total_trades,\n        winning_trades: data.new_winning_trades,\n        updated_at: new Date().toISOString()\n      },\n      json: true\n    });\n    results.push({ json: { ...data, updated: true } });\n  } catch (e) {\n    results.push({ json: { ...data, error: e.message } });\n  }\n}\n\nreturn results.length > 0 ? results : [{ json: { skip: true } }];"
+      },
+      "id": "update_balance",
+      "name": "Update Portfolio Balance",
+      "type": "n8n-nodes-base.code",
+      "position": [1984, 0],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {chat_id: '-1003644771027', parse_mode: 'HTML', text: '📊 <b>Position Closed</b>\\n\\n' + '🤖 Model: ' + ($json.model_name || 'Unknown') + '\\n' + '📈 Side: ' + ($json.side || '-') + '\\n' + '💰 P&L: $' + (parseFloat($json.pnl || 0).toFixed(2)) + '\\n' + '📝 Reason: ' + ($json.close_reason || 'AI Decision')} }}",
+        "options": {}
+      },
+      "id": "tg_close",
+      "name": "Telegram Close",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2208, 0],
+      "typeVersion": 4.3,
+      "onError": "continueRegularOutput"
+    },
+    {"parameters": {}, "id": "noop", "name": "No Action", "type": "n8n-nodes-base.noOp", "position": [1760, 208], "typeVersion": 1},
+    {"parameters": {}, "id": "merge", "name": "Merge Results", "type": "n8n-nodes-base.merge", "position": [2432, 0], "typeVersion": 3.2},
+    {
+      "parameters": {
+        "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_portfolios?select=*,ai_models(name)",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"},
+            {"name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "get_portfolios_champion",
+      "name": "Get Portfolios for Ranking",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2640, 0],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate Ranks v4.0: Weighted champion selection (60% recent 7d, 40% total)\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\nconst BASE_URL = 'https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1';\nconst headers = { 'apikey': API_KEY, 'Authorization': 'Bearer ' + API_KEY };\n\nconst portfolioItems = $input.all();\nconst allPortfolios = portfolioItems.map(item => item.json).filter(p => p && p.id);\n\nif (allPortfolios.length === 0) {\n  return [{ json: { error: 'No portfolios' } }];\n}\n\n// 중복 제거\nconst uniquePortfolios = [];\nconst seen = new Set();\nfor (const p of allPortfolios) {\n  if (p.id && !seen.has(p.id)) {\n    seen.add(p.id);\n    uniquePortfolios.push(p);\n  }\n}\n\n// ========== v4.0: Fetch recent 7-day performance ==========\nlet recentByModel = {};\ntry {\n  const sevenDaysAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();\n  const recentPerf = await this.helpers.httpRequest({\n    method: 'GET',\n    url: BASE_URL + '/performance_history?recorded_at=gte.' + sevenDaysAgo + '&order=recorded_at.desc',\n    headers: headers,\n    json: true\n  });\n  \n  // Group records by model_id\n  for (const rec of (recentPerf || [])) {\n    if (!recentByModel[rec.model_id]) {\n      recentByModel[rec.model_id] = { records: [], startBalance: null, endBalance: null };\n    }\n    recentByModel[rec.model_id].records.push(rec);\n  }\n  \n  // Calculate 7-day return for each model\n  for (const modelId of Object.keys(recentByModel)) {\n    const recs = recentByModel[modelId].records;\n    if (recs.length >= 2) {\n      const newest = parseFloat(recs[0].balance) || 10000;\n      const oldest = parseFloat(recs[recs.length - 1].balance) || 10000;\n      recentByModel[modelId].return7d = oldest > 0 ? ((newest - oldest) / oldest) * 100 : 0;\n    } else {\n      recentByModel[modelId].return7d = 0;\n    }\n  }\n} catch (e) {\n  // If fetch fails, continue with empty recent data\n  recentByModel = {};\n}\n// ========== END v4.0 ==========\n\n// ========== v4.0: Weighted score calculation ==========\nconst sorted = uniquePortfolios\n  .map(p => {\n    const recent = recentByModel[p.model_id] || {};\n    const totalPnl = (parseFloat(p.current_balance) || 10000) - 10000;\n    const return7d = recent.return7d || 0;\n    \n    // Weighted score: 60% recent 7-day return + 40% total PnL (normalized)\n    const weightedScore = (return7d * 0.6) + ((totalPnl / 100) * 0.4);\n    \n    return {\n      id: p.id,\n      model_id: p.model_id,\n      model_name: p.ai_models?.name || 'Unknown',\n      current_balance: parseFloat(p.current_balance) || 10000,\n      realized_pnl: parseFloat(p.realized_pnl) || 0,\n      return7d: return7d,\n      weightedScore: weightedScore\n    };\n  })\n  .sort((a, b) => b.weightedScore - a.weightedScore);\n// ========== END v4.0 ==========\n\n// 랭킹 및 챔피언 설정 - 가중 점수 1등만 is_champion=true\nreturn sorted.map((p, idx) => ({\n  json: {\n    portfolio_id: p.id,\n    model_id: p.model_id,\n    model_name: p.model_name,\n    current_rank: idx + 1,\n    is_champion: idx === 0,\n    current_balance: p.current_balance,\n    realized_pnl: p.realized_pnl,\n    return7d: p.return7d,\n    weightedScore: p.weightedScore\n  }\n}));"
+      },
+      "id": "calc_ranks",
+      "name": "Calculate Ranks",
+      "type": "n8n-nodes-base.code",
+      "position": [2864, 0],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\n\nfor (const item of items) {\n  const data = item.json;\n  if (!data.portfolio_id) continue;\n  \n  try {\n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_portfolios?id=eq.${data.portfolio_id}`,\n      headers: {\n        'apikey': API_KEY,\n        'Authorization': `Bearer ${API_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: {\n        current_rank: data.current_rank,\n        is_champion: data.is_champion,\n        updated_at: new Date().toISOString()\n      },\n      json: true\n    });\n    results.push({ json: { ...data, updated: true } });\n  } catch (e) {\n    results.push({ json: { ...data, error: e.message } });\n  }\n}\n\nreturn results.length > 0 ? results : [{ json: { skip: true } }];"
+      },
+      "id": "update_ranks",
+      "name": "Update Ranks",
+      "type": "n8n-nodes-base.code",
+      "position": [3088, 0],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nreturn items.map(item => ({\n  json: {\n    model_id: item.json.model_id,\n    balance: item.json.current_balance,\n    realized_pnl: item.json.realized_pnl,\n    unrealized_pnl: 0,\n    rank: item.json.current_rank,\n    recorded_at: new Date().toISOString()\n  }\n}));"
+      },
+      "id": "prep_history",
+      "name": "Prepare History",
+      "type": "n8n-nodes-base.code",
+      "position": [3312, 0],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/performance_history",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"},
+            {"name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"},
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "Prefer", "value": "return=minimal"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model_id: $json.model_id, balance: $json.balance, realized_pnl: $json.realized_pnl, unrealized_pnl: $json.unrealized_pnl, rank: $json.rank, recorded_at: $json.recorded_at }) }}",
+        "options": {}
+      },
+      "id": "save_history",
+      "name": "Save History",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [3488, 0],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {"jsCode": "// Only pass first item to prevent multiplication\nreturn [$input.first()];"},
+      "id": "limit_one",
+      "name": "Limit to One",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [48, 0]
+    },
+    {
+      "parameters": {"rule": {"interval": [{"field": "minutes", "minutesInterval": 15}]}},
+      "id": "schedule_trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-432, 0],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => {\n  const processData = $('Process Decisions').first().json;\n  const skipped = processData.skipped || [];\n  const currentPrice = processData.currentPrice || 0;\n  const rankData = $('Calculate Ranks').all().map(i => i.json);\n  \n  let msg = '📊 <b>Portfolio Manager Summary</b>' + '\\n\\n';\n  msg += '💰 BTC: $' + (currentPrice ? currentPrice.toLocaleString() : 'N/A') + '\\n\\n';\n  \n  const allResults = $('Process Decisions').all().map(i => i.json);\n  const executed = allResults.filter(r => r.operation !== 'NONE');\n  \n  if (executed.length > 0) {\n    msg += '✅ <b>Executed (' + executed.length + '):</b>' + '\\n';\n    for (const e of executed) {\n      if (e.operation === 'OPEN_POSITION') {\n        msg += '• ' + e.model_name + ': OPEN ' + e.side + '\\n';\n      } else if (e.operation === 'CLOSE_POSITION') {\n        const pnl = parseFloat(e.pnl || 0).toFixed(2);\n        const pnlSign = parseFloat(e.pnl || 0) >= 0 ? '+' : '';\n        msg += '• ' + e.model_name + ': CLOSE ' + e.side + ' (' + pnlSign + '$' + pnl + ')' + '\\n';\n      }\n    }\n    msg += '\\n';\n  }\n  \n  if (skipped.length > 0) {\n    msg += '⚠️ <b>Skipped (' + skipped.length + '):</b>' + '\\n';\n    for (const s of skipped) {\n      msg += '• ' + s.model_name + ': ' + s.action + '\\n';\n      msg += '   → ' + s.reason + '\\n';\n    }\n    msg += '\\n';\n  } else if (executed.length === 0) {\n    msg += '⚠️ No actions taken' + '\\n';\n    msg += 'Reason: ' + (processData.reason || 'Unknown') + '\\n\\n';\n  }\n  \n  if (rankData.length > 0) {\n    msg += '🏆 <b>Leaderboard:</b>' + '\\n';\n    const rankIcons = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣','7️⃣','❽' ];\n    const sortedRanks = rankData.sort((a, b) => a.current_rank - b.current_rank);\n    \n    for (const r of sortedRanks) {\n      const modelName = r.model_name || 'Unknown';\n      const balance = parseFloat(r.current_balance || 10000);\n      const pnl = balance - 10000;\n      const pnlStr = pnl >= 0 ? '+$' + pnl.toFixed(2) : '-$' + Math.abs(pnl).toFixed(2);\n      const pnlIcon = pnl > 0 ? '📈' : (pnl < 0 ? '📉' : '➖');\n      const rankIcon = rankIcons[r.current_rank - 1] || r.current_rank + '.';\n      msg += rankIcon + ' ' + modelName + ': <b>$' + balance.toFixed(2) + '</b> (' + pnlStr + ') ' + pnlIcon + '\\n';\n    }\n  }\n  \n  msg += '\\n⏰ ' + new Date().toISOString().slice(11,19) + ' UTC';\n  \n  return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n})() }}",
+        "options": {}
+      },
+      "id": "tg_summary",
+      "name": "Telegram Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [3840, 0],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {"jsCode": "// Summary 메시지 1번만 보내기\nreturn [$input.first()];"},
+      "id": "limit_before_summary",
+      "name": "Limit Before Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3664, 0]
+    },
+    {
+      "parameters": {
+        "workflowId": {"__rl": true, "mode": "id", "value": "5bb1OZByz68VWaK8"},
+        "workflowInputs": {"mappingMode": "defineBelow", "value": {}, "matchingColumns": [], "schema": [], "attemptToConvertTypes": false, "convertFieldsToString": true},
+        "options": {"waitForSubWorkflow": true}
+      },
+      "id": "trigger_trade_exec",
+      "name": "Trigger Trade Execution",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [4032, -64]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// Sync TL First v2.1: Fixed SL/TP Detection\n// Bug Fix: Check actual SL/TP levels instead of price comparison\n// ============================================\n\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\nconst BASE_URL = 'https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1';\n\ntry {\n  // 1. TradeLocker 토큰 가져오기\n  const configRes = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${BASE_URL}/system_config?key=eq.tradelocker_access_token`,\n    headers: { 'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}` },\n    json: true\n  });\n  \n  if (!configRes || configRes.length === 0) {\n    return [{ json: { synced: false, reason: 'No TL token' } }];\n  }\n  \n  let accessToken = configRes[0].value;\n  try { accessToken = JSON.parse(accessToken); } catch(e) {}\n  \n  // 2. TradeLocker 계정 정보\n  const accountRes = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://demo.tradelocker.com/backend-api/auth/jwt/all-accounts',\n    headers: { 'Authorization': `Bearer ${accessToken}`, 'accNum': '0' },\n    json: true\n  });\n  \n  const account = accountRes.accounts?.[0];\n  if (!account) {\n    return [{ json: { synced: false, reason: 'No TL account' } }];\n  }\n  \n  // 3. TradeLocker 포지션 조회\n  const posRes = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://demo.tradelocker.com/backend-api/trade/accounts/${account.id}/positions`,\n    headers: { 'Authorization': `Bearer ${accessToken}`, 'accNum': String(account.accNum) },\n    json: true\n  });\n  \n  const rawPositions = posRes.d?.positions || [];\n  const btcTLPositions = rawPositions\n    .map(p => Array.isArray(p) ? { id: String(p[0]), instrumentId: String(p[1]) } : p)\n    .filter(p => String(p.tradableInstrumentId || p.instrumentId) === '9503');\n  \n  const realPositionIds = btcTLPositions.map(p => String(p.id));\n  \n  // 4. OPEN인데 TL에 없는 execution 조회\n  const execRes = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${BASE_URL}/trade_executions?position_status=eq.OPEN`,\n    headers: { 'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}` },\n    json: true\n  });\n  \n  const staleExecutions = (execRes || []).filter(e => \n    e.position_status === 'OPEN' && \n    e.tradelocker_position_id &&\n    !realPositionIds.includes(String(e.tradelocker_position_id))\n  );\n  \n  if (staleExecutions.length === 0) {\n    return [{ json: { synced: true, staleCount: 0, reason: 'No stale executions' } }];\n  }\n  \n  // 5. 챔피언 포트폴리오 조회\n  const champRes = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${BASE_URL}/virtual_portfolios?is_champion=eq.true&select=*,ai_models(name)`,\n    headers: { 'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}` },\n    json: true\n  });\n  \n  const champion = champRes?.[0];\n  if (!champion) {\n    return [{ json: { synced: false, reason: 'No champion' } }];\n  }\n  \n  // 6. 챔피언의 OPEN 가상 포지션 조회\n  const vPosRes = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${BASE_URL}/virtual_positions?status=eq.OPEN&model_id=eq.${champion.model_id}`,\n    headers: { 'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}` },\n    json: true\n  });\n  \n  // 현재 가격 조회\n  const priceRes = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://fapi.binance.com/fapi/v1/ticker/price?symbol=BTCUSDT',\n    json: true\n  });\n  const currentPrice = parseFloat(priceRes.price) || 0;\n  \n  // 7. 청산된 포지션 찾기 및 DB 업데이트\n  let closedCount = 0;\n  let totalPnl = 0;\n  \n  for (const vPos of (vPosRes || [])) {\n    if (vPos.status !== 'OPEN') continue;\n    \n    const execSide = vPos.side === 'LONG' ? 'buy' : 'sell';\n    const matchingStale = staleExecutions.find(e => \n      e.champion_model_id === champion.model_id &&\n      e.side === execSide\n    );\n    \n    if (matchingStale) {\n      // TP/SL로 청산됨!\n      const entryPrice = parseFloat(vPos.entry_price) || 0;\n      const tp = parseFloat(vPos.take_profit) || 0;\n      const sl = parseFloat(vPos.stop_loss) || 0;\n      const qty = parseFloat(vPos.quantity) || 0;\n      const leverage = parseFloat(vPos.leverage) || 5;\n      \n      // ========== BUG FIX v2.1 ==========\n      // Check ACTUAL SL/TP levels instead of price comparison\n      let closedPrice = currentPrice;\n      let closedBy = 'AI_DECISION';  // Default: AI decided to close\n      \n      if (vPos.side === 'LONG') {\n        if (tp && currentPrice >= tp) {\n          closedPrice = tp;\n          closedBy = 'TP';\n        } else if (sl && currentPrice <= sl) {\n          closedPrice = sl;\n          closedBy = 'SL';\n        }\n      } else { // SHORT\n        if (tp && currentPrice <= tp) {\n          closedPrice = tp;\n          closedBy = 'TP';\n        } else if (sl && currentPrice >= sl) {\n          closedPrice = sl;\n          closedBy = 'SL';\n        }\n      }\n      // ========== END BUG FIX ==========\n      \n      const grossPnl = vPos.side === 'LONG'\n        ? (closedPrice - entryPrice) * qty * leverage\n        : (entryPrice - closedPrice) * qty * leverage;\n      const netPnl = grossPnl - 3.18;\n      \n      // virtual_positions 업데이트\n      await this.helpers.httpRequest({\n        method: 'PATCH',\n        url: `${BASE_URL}/virtual_positions?id=eq.${vPos.id}`,\n        headers: { 'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },\n        body: { status: 'CLOSED', closed_at: new Date().toISOString(), close_price: closedPrice, realized_pnl: netPnl },\n        json: true\n      });\n      \n      // trade_executions 업데이트\n      await this.helpers.httpRequest({\n        method: 'PATCH',\n        url: `${BASE_URL}/trade_executions?id=eq.${matchingStale.id}`,\n        headers: { 'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },\n        body: { position_status: 'CLOSED', error_message: `Closed by ${closedBy} at $${closedPrice.toFixed(1)}` },\n        json: true\n      });\n      \n      totalPnl += netPnl;\n      closedCount++;\n    }\n  }\n  \n  // 8. 포트폴리오 잔고 업데이트\n  if (closedCount > 0 && totalPnl !== 0) {\n    const newBalance = parseFloat(champion.current_balance) + totalPnl;\n    const newRealizedPnl = parseFloat(champion.realized_pnl || 0) + totalPnl;\n    const newTrades = (champion.total_trades || 0) + closedCount;\n    const newWins = (champion.winning_trades || 0) + (totalPnl > 0 ? closedCount : 0);\n    \n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `${BASE_URL}/virtual_portfolios?id=eq.${champion.id}`,\n      headers: { 'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },\n      body: { current_balance: Math.round(newBalance * 100) / 100, realized_pnl: Math.round(newRealizedPnl * 100) / 100, total_trades: newTrades, winning_trades: newWins, updated_at: new Date().toISOString() },\n      json: true\n    });\n  }\n  \n  return [{ json: { synced: true, closedCount, totalPnl: Math.round(totalPnl * 100) / 100, championName: champion.ai_models?.name || 'Unknown' } }];\n  \n} catch (e) {\n  return [{ json: { synced: false, error: e.message } }];\n}"
+      },
+      "id": "sync_first",
+      "name": "Sync TL First",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-272, 0],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Get Latest Decisions": {"main": [[{"node": "Get Current Price", "type": "main", "index": 0}]]},
+    "Get Current Price": {"main": [[{"node": "Get Market Data", "type": "main", "index": 0}]]},
+    "Get Market Data": {"main": [[{"node": "Get Portfolios", "type": "main", "index": 0}]]},
+    "Get Portfolios": {"main": [[{"node": "Get Open Positions", "type": "main", "index": 0}]]},
+    "Get Open Positions": {"main": [[{"node": "Process Decisions", "type": "main", "index": 0}]]},
+    "Process Decisions": {"main": [[{"node": "Filter Skip Items", "type": "main", "index": 0}]]},
+    "Filter Skip Items": {"main": [[{"node": "Switch Operation", "type": "main", "index": 0}]]},
+    "Switch Operation": {"main": [[{"node": "Create Position", "type": "main", "index": 0}], [{"node": "Close Position", "type": "main", "index": 0}], [{"node": "No Action", "type": "main", "index": 0}]]},
+    "Create Position": {"main": [[{"node": "Telegram Open", "type": "main", "index": 0}]]},
+    "Close Position": {"main": [[{"node": "Update Portfolio Balance", "type": "main", "index": 0}]]},
+    "Update Portfolio Balance": {"main": [[{"node": "Telegram Close", "type": "main", "index": 0}]]},
+    "Merge Results": {"main": [[{"node": "Get Portfolios for Ranking", "type": "main", "index": 0}]]},
+    "Get Portfolios for Ranking": {"main": [[{"node": "Calculate Ranks", "type": "main", "index": 0}]]},
+    "Calculate Ranks": {"main": [[{"node": "Update Ranks", "type": "main", "index": 0}]]},
+    "Update Ranks": {"main": [[{"node": "Prepare History", "type": "main", "index": 0}]]},
+    "Prepare History": {"main": [[{"node": "Save History", "type": "main", "index": 0}]]},
+    "Called by AI Decision Engine": {"main": [[{"node": "Limit to One", "type": "main", "index": 0}]]},
+    "Every 15 Minutes": {"main": [[{"node": "Limit to One", "type": "main", "index": 0}]]},
+    "Save History": {"main": [[{"node": "Limit Before Summary", "type": "main", "index": 0}]]},
+    "Limit Before Summary": {"main": [[{"node": "Telegram Summary", "type": "main", "index": 0}]]},
+    "Telegram Summary": {"main": [[{"node": "Trigger Trade Execution", "type": "main", "index": 0}]]},
+    "Limit to One": {"main": [[{"node": "Sync TL First", "type": "main", "index": 0}]]},
+    "Sync TL First": {"main": [[{"node": "Get Latest Decisions", "type": "main", "index": 0}]]},
+    "No Action": {"main": [[{"node": "Get Portfolios for Ranking", "type": "main", "index": 0}]]},
+    "Telegram Open": {"main": [[{"node": "Get Portfolios for Ranking", "type": "main", "index": 0}]]},
+    "Telegram Close": {"main": [[{"node": "Get Portfolios for Ranking", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "s90lTAdKG3PBwk39"
+  }
+}

@@ -1,0 +1,2549 @@
+{
+  "success": true,
+  "data": {
+    "updatedAt": "2026-01-28T11:01:02.330Z",
+    "createdAt": "2026-01-09T01:42:20.777Z",
+    "id": "5bb1OZByz68VWaK8",
+    "name": "4. Trade Execution (Position Sync)",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "id": "workflow_trigger",
+        "name": "Called from AI Engine",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "system_config",
+          "returnAll": true
+        },
+        "id": "get_config",
+        "name": "Get System Config",
+        "type": "n8n-nodes-base.supabase",
+        "position": [
+          224,
+          112
+        ],
+        "typeVersion": 1,
+        "credentials": {
+          "supabaseApi": {
+            "id": "1WUP90pAaSuxQoxn",
+            "name": "Supabase account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const configs = $input.all().map(i => i.json);\nconst tokenConfig = configs.find(c => c.key === 'tradelocker_access_token');\nconst tradingEnabled = configs.find(c => c.key === 'is_trading_enabled');\n\nif (!tradingEnabled || tradingEnabled.value === false || tradingEnabled.value === 'false') {\n  return [{ json: { skip: true, reason: 'Trading is disabled' } }];\n}\n\nif (!tokenConfig) {\n  return [{ json: { skip: true, reason: 'No access token' } }];\n}\n\nlet accessToken = tokenConfig.value;\ntry { accessToken = JSON.parse(accessToken); } catch(e) {}\n\nreturn [{ json: { skip: false, accessToken, allConfigs: configs } }];"
+        },
+        "id": "check_config",
+        "name": "Check Config",
+        "type": "n8n-nodes-base.code",
+        "position": [
+          448,
+          112
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "1",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                },
+                "leftValue": "={{ $json.skip }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "if_trading_enabled",
+        "name": "Trading Enabled?",
+        "type": "n8n-nodes-base.if",
+        "position": [
+          672,
+          112
+        ],
+        "typeVersion": 2.3
+      },
+      {
+        "parameters": {
+          "url": "https://demo.tradelocker.com/backend-api/auth/jwt/all-accounts",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Check Config').first().json.accessToken }}"
+              },
+              {
+                "name": "accNum",
+                "value": "0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "get_account",
+        "name": "Get TL Account",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          896,
+          0
+        ],
+        "typeVersion": 4.3,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "url": "=https://demo.tradelocker.com/backend-api/trade/accounts/{{ $('Get TL Account').first().json.accounts[0].id }}/positions",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Check Config').first().json.accessToken }}"
+              },
+              {
+                "name": "accNum",
+                "value": "={{ $('Get TL Account').first().json.accounts[0].accNum }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "get_tl_positions",
+        "name": "Get TL Positions",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          1056,
+          0
+        ],
+        "typeVersion": 4.3,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_portfolios?is_champion=eq.true&select=*,ai_models(name)",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "get_champion",
+        "name": "Get Champion Portfolio",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          1392,
+          0
+        ],
+        "typeVersion": 4.3
+      },
+      {
+        "parameters": {
+          "url": "=https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_positions?status=eq.OPEN&model_id=eq.{{ $('Get Champion Portfolio').first().json.model_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "get_champion_positions",
+        "name": "Get Champion Virtual Positions",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          1568,
+          0
+        ],
+        "typeVersion": 4.3,
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/trade_executions?position_status=eq.OPEN",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "get_ai_executions",
+        "name": "Get AI Open Executions",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          1760,
+          0
+        ],
+        "typeVersion": 4.3,
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// ============================================\n// POSITION SYNC LOGIC v2.7 - Champion decision takes priority\n// Champion's current round decision takes priority over opened_as_champion flag\n// ============================================\n\nlet executionMode = 'full';\ntry {\n  const inputData = $('Called from AI Engine').first().json;\n  if (inputData && inputData.mode) executionMode = inputData.mode;\n} catch(e) {}\n\ntry {\n  const scheduleData = $('Set Sync Only Mode').first().json;\n  if (scheduleData && scheduleData.mode) executionMode = scheduleData.mode;\n} catch(e) {}\n\nconst championData = $('Get Champion Portfolio').first().json;\nconst champion = Array.isArray(championData) ? championData[0] : championData;\n\nconst positionsData = $('Get Champion Virtual Positions').all().map(i => i.json);\nconst championVirtualPositions = positionsData.flat().filter(p => p && p.id);\n\n// Get champion's recent decision (for logging only)\nlet championDecision = null;\nlet championDecisionTime = null;\ntry {\n  const decisionData = $('Get Champion Recent Decision').first().json;\n  const decisions = Array.isArray(decisionData) ? decisionData : [decisionData];\n  if (decisions.length > 0 && decisions[0]) {\n    championDecision = decisions[0].action;\n    championDecisionTime = decisions[0].created_at;\n  }\n} catch(e) {}\n\nconst aiExecutions = $('Get AI Open Executions').all().map(i => i.json).filter(e => e && e.id);\nconst tlPositionsData = $('Get TL Positions').first().json;\nconst accountData = $('Get TL Account').first().json;\nconst config = $('Check Config').first().json;\n\n// ========== API ERROR CHECK ==========\nconst hasApiError = tlPositionsData.error || \n                   tlPositionsData.status >= 500 ||\n                   (tlPositionsData.message && tlPositionsData.message.includes('504')) ||\n                   (tlPositionsData.message && tlPositionsData.message.includes('timeout'));\n\nif (hasApiError) {\n  const championName = champion?.ai_models?.name || 'Unknown';\n  return [{\n    json: {\n      action: 'SKIP_API_ERROR',\n      reason: 'TradeLocker API error - skipping sync to prevent false closures',\n      errorDetails: tlPositionsData.error?.message || tlPositionsData.message || 'Unknown API error',\n      executionMode,\n      championName,\n      championModelId: champion?.model_id,\n      championPortfolioId: champion?.id,\n      championCurrentBalance: parseFloat(champion?.current_balance) || 10000,\n      championDecision,\n      currentPrice: 0,\n      staleExecutionIds: [],\n      summary: {\n        virtualLongs: championVirtualPositions.filter(p => p.side === 'LONG' && p.status === 'OPEN').length,\n        virtualShorts: championVirtualPositions.filter(p => p.side === 'SHORT' && p.status === 'OPEN').length,\n        realLongs: -1,\n        realShorts: -1,\n        staleExecutions: 0,\n        openExecutions: aiExecutions.filter(e => e.position_status === 'OPEN').length,\n        orphanedPosition: false,\n        orphanedPositionSide: null,\n        championDecision,\n        apiError: true\n      }\n    }\n  }];\n}\n\nlet currentPrice = 0;\ntry {\n  const priceData = $('Get Current Price').first().json;\n  currentPrice = parseFloat(priceData.price) || 0;\n} catch(e) {}\n\nconst MIN_TP_DISTANCE = 360;\nconst MIN_SL_DISTANCE = 240;\nconst MIN_RISK_REWARD = 1.5;\n\nconst rawPositions = tlPositionsData.d?.positions || tlPositionsData.positions || [];\nconst tlPositions = rawPositions.map(p => {\n  if (Array.isArray(p)) {\n    return {\n      id: String(p[0]),\n      instrumentId: String(p[1]),\n      side: p[3],\n      qty: parseFloat(p[4]) || 0,\n      avgPrice: parseFloat(p[5]) || 0,\n      stopLoss: p[9] ? parseFloat(p[9]) : null,\n      takeProfit: p[10] ? parseFloat(p[10]) : null\n    };\n  }\n  return { ...p, id: String(p.id), stopLoss: p.stopLoss || null, takeProfit: p.takeProfit || null };\n});\n\nconst btcTLPositions = tlPositions.filter(p => String(p.tradableInstrumentId || p.instrumentId) === '9503');\nconst realPositionIds = btcTLPositions.map(p => String(p.id));\nconst account = accountData.accounts?.[0] || {};\n\nconst staleExecutions = aiExecutions.filter(e => \n  e.position_status === 'OPEN' && \n  e.tradelocker_position_id &&\n  !realPositionIds.includes(String(e.tradelocker_position_id))\n);\n\nconst championName = champion?.ai_models?.name || 'Unknown';\nconst championModelId = champion?.model_id;\n\nif (!championModelId) {\n  return [{ json: { action: 'NONE', reason: 'No champion model found', executionMode, championName, currentPrice, staleExecutionIds: staleExecutions.map(e => e.id) } }];\n}\n\nconst virtualLongs = championVirtualPositions.filter(p => p.side === 'LONG' && p.status === 'OPEN');\nconst virtualShorts = championVirtualPositions.filter(p => p.side === 'SHORT' && p.status === 'OPEN');\nconst realLongs = btcTLPositions.filter(p => p.side === 'buy');\nconst realShorts = btcTLPositions.filter(p => p.side === 'sell');\n\nconst openExecutions = aiExecutions.filter(e => e.position_status === 'OPEN');\nlet orphanedPosition = null;\nlet orphanedPositionSide = null;\n\nif (btcTLPositions.length > 0) {\n  for (const tlPos of btcTLPositions) {\n    const matchingExec = openExecutions.find(e => \n      String(e.tradelocker_position_id) === String(tlPos.id)\n    );\n    if (!matchingExec) {\n      orphanedPosition = tlPos;\n      orphanedPositionSide = tlPos.side === 'buy' ? 'LONG' : 'SHORT';\n      break;\n    }\n  }\n}\n\nlet syncAction = 'NONE';\nlet syncDetails = {};\n\nif (orphanedPosition) {\n  const matchingVirtual = orphanedPositionSide === 'LONG' ? virtualLongs[0] : virtualShorts[0];\n  \n  if (!matchingVirtual) {\n    syncAction = orphanedPositionSide === 'LONG' ? 'CLOSE_LONG' : 'CLOSE_SHORT';\n    syncDetails = {\n      reason: 'Orphaned position - no matching virtual position for current champion',\n      positionId: orphanedPosition.id,\n      quantity: orphanedPosition.qty,\n      avgPrice: orphanedPosition.avgPrice,\n      currentPrice: currentPrice,\n      orphanedSide: orphanedPositionSide\n    };\n  } else if (!orphanedPosition.stopLoss || !orphanedPosition.takeProfit) {\n    syncAction = orphanedPositionSide === 'LONG' ? 'CLOSE_LONG' : 'CLOSE_SHORT';\n    syncDetails = {\n      reason: 'Orphaned position missing SL/TP - closing for resync',\n      positionId: orphanedPosition.id,\n      quantity: orphanedPosition.qty,\n      avgPrice: orphanedPosition.avgPrice,\n      currentPrice: currentPrice,\n      orphanedSide: orphanedPositionSide\n    };\n  } else {\n    syncAction = 'NONE';\n    syncDetails = { \n      reason: 'Orphaned position accepted - direction matches and SL/TP set',\n      positionId: orphanedPosition.id,\n      side: orphanedPositionSide\n    };\n  }\n}\nelse if (staleExecutions.length > 0) {\n  const processedPositionIds = new Set();\n  const autoClosedPositions = [];\n  \n  for (const staleExec of staleExecutions) {\n    const positionId = String(staleExec.tradelocker_position_id);\n    if (processedPositionIds.has(positionId)) continue;\n    processedPositionIds.add(positionId);\n    \n    const side = staleExec.side === 'buy' ? 'LONG' : 'SHORT';\n    const entryPrice = parseFloat(staleExec.price) || 0;\n    const qty = parseFloat(staleExec.quantity) || 0.03;\n    const leverage = 5;\n    const ROUND_TRIP_FEE = 3.18;\n    \n    const matchingVPos = championVirtualPositions.find(vp => \n      vp.side === side && vp.status === 'OPEN'\n    );\n    \n    const actualSL = matchingVPos ? parseFloat(matchingVPos.stop_loss) : null;\n    const actualTP = matchingVPos ? parseFloat(matchingVPos.take_profit) : null;\n    \n    let closedBy = 'AI_DECISION';\n    let closedPrice = currentPrice;\n    \n    if (side === 'LONG') {\n      if (actualTP && currentPrice >= actualTP) {\n        closedBy = 'TP';\n        closedPrice = actualTP;\n      } else if (actualSL && currentPrice <= actualSL) {\n        closedBy = 'SL';\n        closedPrice = actualSL;\n      }\n    } else {\n      if (actualTP && currentPrice <= actualTP) {\n        closedBy = 'TP';\n        closedPrice = actualTP;\n      } else if (actualSL && currentPrice >= actualSL) {\n        closedBy = 'SL';\n        closedPrice = actualSL;\n      }\n    }\n    \n    let grossPnl = side === 'LONG'\n      ? (closedPrice - entryPrice) * qty * leverage\n      : (entryPrice - closedPrice) * qty * leverage;\n    const netPnl = grossPnl - ROUND_TRIP_FEE;\n    \n    autoClosedPositions.push({\n      executionId: staleExec.id,\n      positionId: positionId,\n      side: side,\n      entryPrice,\n      closedPrice,\n      closedBy,\n      quantity: qty,\n      leverage,\n      grossPnl: Math.round(grossPnl * 100) / 100,\n      netPnl: Math.round(netPnl * 100) / 100,\n      actualSL,\n      actualTP,\n      virtualPositionId: matchingVPos?.id || null\n    });\n  }\n  \n  if (autoClosedPositions.length > 0) {\n    syncAction = 'AUTO_CLOSED_BY_SLTP';\n    syncDetails = {\n      positions: autoClosedPositions,\n      totalPnl: autoClosedPositions.reduce((sum, p) => sum + p.netPnl, 0)\n    };\n  }\n}\nelse if (executionMode === 'sync_only') {\n  syncAction = 'NONE';\n  syncDetails = { reason: 'Sync only mode - no position changes', executionMode };\n}\n// ========== v2.7: Champion decision takes priority ==========\n// 1. 챔피언이 이번 라운드에 OPEN 결정을 내렸다면 즉시 실행 (opened_as_champion 무관)\nelse if (championDecision === 'OPEN_LONG' && realLongs.length === 0 && realShorts.length === 0 && virtualLongs.length > 0) {\n  const vPos = virtualLongs[0];\n  const rawSL = parseFloat(vPos.stop_loss) || null;\n  const rawTP = parseFloat(vPos.take_profit) || null;\n  const { stopLoss, takeProfit, slAdjusted, tpAdjusted, rrAdjusted } = validateAndFixSLTP('buy', rawSL, rawTP, currentPrice);\n  \n  syncAction = 'OPEN_LONG';\n  syncDetails = {\n    side: 'buy',\n    quantity: parseFloat(vPos.quantity) || 0.02,\n    stopLoss, takeProfit,\n    originalSL: rawSL, originalTP: rawTP,\n    slAdjusted, tpAdjusted, rrAdjusted,\n    virtualPositionId: vPos.id,\n    triggeredByChampionDecision: true,\n    championDecision: championDecision\n  };\n}\nelse if (championDecision === 'OPEN_SHORT' && realShorts.length === 0 && realLongs.length === 0 && virtualShorts.length > 0) {\n  const vPos = virtualShorts[0];\n  const rawSL = parseFloat(vPos.stop_loss) || null;\n  const rawTP = parseFloat(vPos.take_profit) || null;\n  const { stopLoss, takeProfit, slAdjusted, tpAdjusted, rrAdjusted } = validateAndFixSLTP('sell', rawSL, rawTP, currentPrice);\n  \n  syncAction = 'OPEN_SHORT';\n  syncDetails = {\n    side: 'sell',\n    quantity: parseFloat(vPos.quantity) || 0.02,\n    stopLoss, takeProfit,\n    originalSL: rawSL, originalTP: rawTP,\n    slAdjusted, tpAdjusted, rrAdjusted,\n    virtualPositionId: vPos.id,\n    triggeredByChampionDecision: true,\n    championDecision: championDecision\n  };\n}\n// 2. 챔피언 결정이 없을 때만 기존 포지션 동기화 (opened_as_champion 체크)\nelse if (virtualLongs.length > 0 && realLongs.length === 0 && realShorts.length === 0) {\n  const vPos = virtualLongs[0];\n  \n  // 기존 포지션 동기화는 opened_as_champion 필요\n  if (vPos.opened_as_champion !== true) {\n    syncAction = 'NONE';\n    syncDetails = { \n      reason: 'Virtual LONG exists but no champion decision and not opened as champion - skipping sync',\n      virtualPositionId: vPos.id,\n      opened_as_champion: vPos.opened_as_champion,\n      championDecision: championDecision,\n      skippedSync: true\n    };\n  } else {\n    const rawSL = parseFloat(vPos.stop_loss) || null;\n    const rawTP = parseFloat(vPos.take_profit) || null;\n    const { stopLoss, takeProfit, slAdjusted, tpAdjusted, rrAdjusted } = validateAndFixSLTP('buy', rawSL, rawTP, currentPrice);\n    \n    syncAction = 'OPEN_LONG';\n    syncDetails = {\n      side: 'buy',\n      quantity: parseFloat(vPos.quantity) || 0.02,\n      stopLoss, takeProfit,\n      originalSL: rawSL, originalTP: rawTP,\n      slAdjusted, tpAdjusted, rrAdjusted,\n      virtualPositionId: vPos.id,\n      triggeredByVirtualPosition: true,\n      opened_as_champion: true\n    };\n  }\n}\nelse if (virtualShorts.length > 0 && realShorts.length === 0 && realLongs.length === 0) {\n  const vPos = virtualShorts[0];\n  \n  // 기존 포지션 동기화는 opened_as_champion 필요\n  if (vPos.opened_as_champion !== true) {\n    syncAction = 'NONE';\n    syncDetails = { \n      reason: 'Virtual SHORT exists but no champion decision and not opened as champion - skipping sync',\n      virtualPositionId: vPos.id,\n      opened_as_champion: vPos.opened_as_champion,\n      championDecision: championDecision,\n      skippedSync: true\n    };\n  } else {\n    const rawSL = parseFloat(vPos.stop_loss) || null;\n    const rawTP = parseFloat(vPos.take_profit) || null;\n    const { stopLoss, takeProfit, slAdjusted, tpAdjusted, rrAdjusted } = validateAndFixSLTP('sell', rawSL, rawTP, currentPrice);\n    \n    syncAction = 'OPEN_SHORT';\n    syncDetails = {\n      side: 'sell',\n      quantity: parseFloat(vPos.quantity) || 0.02,\n      stopLoss, takeProfit,\n      originalSL: rawSL, originalTP: rawTP,\n      slAdjusted, tpAdjusted, rrAdjusted,\n      virtualPositionId: vPos.id,\n      triggeredByVirtualPosition: true,\n      opened_as_champion: true\n    };\n  }\n}\n// ========== END v2.7 ==========\nelse if (virtualLongs.length > 0 && realShorts.length > 0) {\n  const realPos = realShorts[0];\n  syncAction = 'CLOSE_SHORT';\n  syncDetails = {\n    reason: 'Direction mismatch - champion wants LONG but SHORT exists',\n    positionId: realPos.id,\n    quantity: realPos.qty,\n    avgPrice: realPos.avgPrice,\n    currentPrice: currentPrice,\n    nextAction: 'OPEN_LONG'\n  };\n}\nelse if (virtualShorts.length > 0 && realLongs.length > 0) {\n  const realPos = realLongs[0];\n  syncAction = 'CLOSE_LONG';\n  syncDetails = {\n    reason: 'Direction mismatch - champion wants SHORT but LONG exists',\n    positionId: realPos.id,\n    quantity: realPos.qty,\n    avgPrice: realPos.avgPrice,\n    currentPrice: currentPrice,\n    nextAction: 'OPEN_SHORT'\n  };\n}\nelse if (virtualLongs.length === 0 && virtualShorts.length === 0 && (realLongs.length > 0 || realShorts.length > 0)) {\n  if (realLongs.length > 0) {\n    const realPos = realLongs[0];\n    syncAction = 'CLOSE_LONG';\n    syncDetails = {\n      reason: 'Champion has no position but LONG exists in TL',\n      positionId: realPos.id,\n      quantity: realPos.qty,\n      avgPrice: realPos.avgPrice,\n      currentPrice: currentPrice\n    };\n  } else {\n    const realPos = realShorts[0];\n    syncAction = 'CLOSE_SHORT';\n    syncDetails = {\n      reason: 'Champion has no position but SHORT exists in TL',\n      positionId: realPos.id,\n      quantity: realPos.qty,\n      avgPrice: realPos.avgPrice,\n      currentPrice: currentPrice\n    };\n  }\n}\nelse {\n  syncAction = 'NONE';\n  syncDetails = { reason: 'Already in sync' };\n}\n\nfunction validateAndFixSLTP(side, sl, tp, price) {\n  let finalSL = sl;\n  let finalTP = tp;\n  let slAdjusted = false;\n  let tpAdjusted = false;\n  let rrAdjusted = false;\n  \n  if (side === 'buy') {\n    const minSL = price - MIN_SL_DISTANCE;\n    if (!finalSL || finalSL >= price || (price - finalSL) < MIN_SL_DISTANCE) {\n      finalSL = minSL;\n      slAdjusted = true;\n    }\n    const minTP = price + MIN_TP_DISTANCE;\n    if (!finalTP || finalTP <= price || (finalTP - price) < MIN_TP_DISTANCE) {\n      finalTP = minTP;\n      tpAdjusted = true;\n    }\n  } else {\n    const minSL = price + MIN_SL_DISTANCE;\n    if (!finalSL || finalSL <= price || (finalSL - price) < MIN_SL_DISTANCE) {\n      finalSL = minSL;\n      slAdjusted = true;\n    }\n    const minTP = price - MIN_TP_DISTANCE;\n    if (!finalTP || finalTP >= price || (price - finalTP) < MIN_TP_DISTANCE) {\n      finalTP = minTP;\n      tpAdjusted = true;\n    }\n  }\n  \n  const slDistance = Math.abs(price - finalSL);\n  const tpDistance = Math.abs(finalTP - price);\n  const currentRR = tpDistance / slDistance;\n  \n  if (currentRR < MIN_RISK_REWARD) {\n    if (side === 'buy') {\n      finalTP = price + (slDistance * MIN_RISK_REWARD);\n    } else {\n      finalTP = price - (slDistance * MIN_RISK_REWARD);\n    }\n    tpAdjusted = true;\n    rrAdjusted = true;\n  }\n  \n  finalSL = Math.round(finalSL * 10) / 10;\n  finalTP = Math.round(finalTP * 10) / 10;\n  \n  return { stopLoss: finalSL, takeProfit: finalTP, slAdjusted, tpAdjusted, rrAdjusted };\n}\n\nreturn [{\n  json: {\n    action: syncAction,\n    details: syncDetails,\n    executionMode,\n    championName,\n    championModelId,\n    championPortfolioId: champion?.id,\n    championCurrentBalance: parseFloat(champion?.current_balance) || 10000,\n    championDecision,\n    championDecisionTime,\n    currentPrice,\n    accessToken: config.accessToken,\n    accNum: account.accNum,\n    accountId: account.id,\n    instrumentId: 9503,\n    routeId: 1084503,\n    staleExecutionIds: staleExecutions.map(e => e.id),\n    summary: {\n      virtualLongs: virtualLongs.length,\n      virtualShorts: virtualShorts.length,\n      realLongs: realLongs.length,\n      realShorts: realShorts.length,\n      staleExecutions: staleExecutions.length,\n      openExecutions: openExecutions.length,\n      orphanedPosition: !!orphanedPosition,\n      orphanedPositionSide,\n      championDecision\n    }\n  }\n}];"
+        },
+        "id": "sync_analysis",
+        "name": "Sync Analysis",
+        "type": "n8n-nodes-base.code",
+        "position": [
+          1920,
+          0
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "version": 2,
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "or",
+                  "conditions": [
+                    {
+                      "id": "c1",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "OPEN_LONG"
+                    },
+                    {
+                      "id": "c2",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "OPEN_SHORT"
+                    }
+                  ]
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "version": 2,
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "or",
+                  "conditions": [
+                    {
+                      "id": "c3",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "CLOSE_LONG"
+                    },
+                    {
+                      "id": "c4",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "CLOSE_SHORT"
+                    }
+                  ]
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "version": 2,
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "or",
+                  "conditions": [
+                    {
+                      "id": "c5",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "NONE"
+                    },
+                    {
+                      "id": "c5b",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "SKIP_API_ERROR"
+                    }
+                  ]
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "version": 2,
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "id": "c6",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "AUTO_CLOSED_BY_SLTP"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "none"
+          }
+        },
+        "id": "switch_action",
+        "name": "Switch Action",
+        "type": "n8n-nodes-base.switch",
+        "position": [
+          2240,
+          -16
+        ],
+        "typeVersion": 3.2
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://demo.tradelocker.com/backend-api/trade/accounts/{{ $json.accountId }}/orders",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $json.accessToken }}"
+              },
+              {
+                "name": "accNum",
+                "value": "={{ $json.accNum }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ (() => {\n  const order = {\n    price: 0,\n    qty: $json.details.quantity,\n    routeId: $json.routeId,\n    side: $json.details.side,\n    tradableInstrumentId: $json.instrumentId,\n    type: 'market',\n    validity: 'IOC'\n  };\n  \n  // SL/TP가 있을 때만 추가\n  if ($json.details.stopLoss) {\n    order.stopLoss = $json.details.stopLoss;\n  }\n  if ($json.details.takeProfit) {\n    order.takeProfit = $json.details.takeProfit;\n  }\n  \n  return JSON.stringify(order);\n})() }}",
+          "options": {}
+        },
+        "id": "open_order",
+        "name": "Open Position Order",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          2544,
+          -176
+        ],
+        "typeVersion": 4.3,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "amount": 2
+        },
+        "id": "wait_open",
+        "name": "Wait 2s",
+        "type": "n8n-nodes-base.wait",
+        "position": [
+          2688,
+          -176
+        ],
+        "typeVersion": 1.1,
+        "webhookId": "128aaaf1-6da2-4d1b-93b7-d2c1ee26a47e"
+      },
+      {
+        "parameters": {
+          "url": "=https://demo.tradelocker.com/backend-api/trade/accounts/{{ $('Sync Analysis').first().json.accountId }}/positions",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Sync Analysis').first().json.accessToken }}"
+              },
+              {
+                "name": "accNum",
+                "value": "={{ $('Sync Analysis').first().json.accNum }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "get_new_position",
+        "name": "Get New Position",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          2864,
+          -176
+        ],
+        "typeVersion": 4.3,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const orderResult = $('Open Position Order').first().json;\nconst positionsData = $('Get New Position').first().json;\nconst syncData = $('Sync Analysis').first().json;\n\nconst isSuccess = orderResult.s?.toLowerCase() === 'ok';\n\nlet positionId = null;\nif (isSuccess) {\n  const positions = positionsData.d?.positions || [];\n  for (const pos of positions) {\n    const p = Array.isArray(pos) ? { id: pos[0], instrumentId: pos[1] } : pos;\n    if (String(p.tradableInstrumentId || p.instrumentId) === '9503') {\n      positionId = String(p.id);\n    }\n  }\n}\n\n// ⭐ 실제 체결가 기준으로 SL/TP 재계산\nconst actualPrice = parseFloat(orderResult.d?.averagePrice) || syncData.currentPrice || 0;\nconst originalPrice = syncData.currentPrice || actualPrice;\nconst priceDiff = actualPrice - originalPrice;\n\nconst MIN_SL_DISTANCE = 240;\nconst MIN_TP_DISTANCE = 360;\nconst MIN_RISK_REWARD = 1.5;\n\n// ⭐ 슬리피지 조정 함수 (최소 거리 유지)\nfunction adjustSLTPForSlippage(side, originalSL, originalTP, originalPrice, actualPrice) {\n  let adjustedSL = originalSL;\n  let adjustedTP = originalTP;\n  let slAdjusted = false;\n  let tpAdjusted = false;\n  \n  // 슬리피지가 $1 이상일 때만 조정\n  if (Math.abs(actualPrice - originalPrice) > 1) {\n    if (side === 'buy') {\n      // LONG: TP는 그대로 이동, SL은 최소 거리 유지\n      adjustedTP = originalTP + (actualPrice - originalPrice);\n      \n      // SL은 최소 거리를 확보하도록 조정\n      const minSL = actualPrice - MIN_SL_DISTANCE;\n      adjustedSL = Math.min(originalSL, minSL);\n      \n      tpAdjusted = true;\n      slAdjusted = (adjustedSL !== originalSL);\n    } else {\n      // SHORT: TP는 그대로 이동, SL은 최소 거리 유지\n      adjustedTP = originalTP - (actualPrice - originalPrice);\n      \n      // SL은 최소 거리를 확보하도록 조정\n      const minSL = actualPrice + MIN_SL_DISTANCE;\n      adjustedSL = Math.max(originalSL, minSL);\n      \n      tpAdjusted = true;\n      slAdjusted = (adjustedSL !== originalSL);\n    }\n  }\n  \n  // 최종 validation (R:R 비율 체크)\n  const slDistance = Math.abs(actualPrice - adjustedSL);\n  const tpDistance = Math.abs(adjustedTP - actualPrice);\n  const currentRR = tpDistance / slDistance;\n  \n  if (currentRR < MIN_RISK_REWARD) {\n    // R:R이 나쁘면 TP를 늘림\n    if (side === 'buy') {\n      adjustedTP = actualPrice + (slDistance * MIN_RISK_REWARD);\n    } else {\n      adjustedTP = actualPrice - (slDistance * MIN_RISK_REWARD);\n    }\n    tpAdjusted = true;\n  }\n  \n  // 소수점 한자리로 반올림\n  adjustedSL = Math.round(adjustedSL * 10) / 10;\n  adjustedTP = Math.round(adjustedTP * 10) / 10;\n  \n  return { adjustedSL, adjustedTP, slAdjusted, tpAdjusted };\n}\n\nlet finalSL = syncData.details.stopLoss;\nlet finalTP = syncData.details.takeProfit;\nlet slAdjustedBySlippage = false;\nlet tpAdjustedBySlippage = false;\n\nif (isSuccess && actualPrice > 0) {\n  const result = adjustSLTPForSlippage(\n    syncData.details.side,\n    syncData.details.stopLoss,\n    syncData.details.takeProfit,\n    originalPrice,\n    actualPrice\n  );\n  \n  finalSL = result.adjustedSL;\n  finalTP = result.adjustedTP;\n  slAdjustedBySlippage = result.slAdjusted;\n  tpAdjustedBySlippage = result.tpAdjusted;\n}\n\nreturn [{\n  json: {\n    symbol: 'BTCUSD',\n    action: syncData.action,\n    side: syncData.details.side,\n    quantity: syncData.details.quantity,\n    price: actualPrice,\n    tradelocker_order_id: String(orderResult.d?.orderId || ''),\n    tradelocker_position_id: positionId,\n    position_status: isSuccess ? 'OPEN' : 'FAILED',\n    status: isSuccess ? 'FILLED' : 'FAILED',\n    champion_model_id: syncData.championModelId,\n    error_message: orderResult.errmsg || null,\n    executed_at: new Date().toISOString(),\n    championName: syncData.championName,\n    currentPrice: syncData.currentPrice,\n    actualPrice: actualPrice,\n    priceDiff: Math.round(priceDiff * 100) / 100,\n    stopLoss: finalSL,\n    takeProfit: finalTP,\n    originalSL: syncData.details.originalSL,\n    originalTP: syncData.details.originalTP,\n    slAdjusted: slAdjustedBySlippage || syncData.details.slAdjusted || false,\n    tpAdjusted: tpAdjustedBySlippage || syncData.details.tpAdjusted || false,\n    rrAdjusted: syncData.details.rrAdjusted || false,\n    slAdjustedBySlippage: slAdjustedBySlippage,\n    tpAdjustedBySlippage: tpAdjustedBySlippage,\n    summary: syncData.summary\n  }\n}];"
+        },
+        "id": "prepare_open_save",
+        "name": "Prepare Open Save",
+        "type": "n8n-nodes-base.code",
+        "position": [
+          3184,
+          -176
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "method": "DELETE",
+          "url": "=https://demo.tradelocker.com/backend-api/trade/positions/{{ $json.details.positionId }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $json.accessToken }}"
+              },
+              {
+                "name": "accNum",
+                "value": "={{ $json.accNum }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "close_order",
+        "name": "Close Position Order",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          2464,
+          0
+        ],
+        "typeVersion": 4.3,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const orderResult = $('Close Position Order').first().json;\nconst syncData = $('Sync Analysis').first().json;\n\n// DELETE 요청 성공 여부 확인\n// TradeLocker DELETE는 성공 시 s: 'ok' 또는 빈 응답\nconst isSuccess = orderResult.s?.toLowerCase() === 'ok' || \n                  orderResult.status === 'ok' ||\n                  !orderResult.error;\n\nreturn [{\n  json: {\n    symbol: 'BTCUSD',\n    action: syncData.action,\n    side: syncData.details.side,\n    quantity: syncData.details.quantity,\n    price: syncData.currentPrice || 0,\n    tradelocker_order_id: null,\n    tradelocker_position_id: syncData.details.positionId,\n    position_status: 'CLOSED',\n    status: isSuccess ? 'FILLED' : 'FAILED',\n    champion_model_id: syncData.championModelId,\n    error_message: orderResult.errmsg || orderResult.error || null,\n    executed_at: new Date().toISOString(),\n    championName: syncData.championName,\n    summary: syncData.summary,\n    closeExecutionId: syncData.details.executionId,\n    deleteResponse: orderResult\n  }\n}];"
+        },
+        "id": "prepare_close_save",
+        "name": "Prepare Close Save",
+        "type": "n8n-nodes-base.code",
+        "position": [
+          2688,
+          0
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nif (!data.closeExecutionId) return [$input.first()];\n\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'PATCH',\n    url: `https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/trade_executions?id=eq.${data.closeExecutionId}`,\n    headers: {\n      'apikey': API_KEY,\n      'Authorization': `Bearer ${API_KEY}`,\n      'Content-Type': 'application/json',\n      'Prefer': 'return=minimal'\n    },\n    body: { position_status: 'CLOSED' },\n    json: true\n  });\n} catch(e) {}\n\nreturn [$input.first()];"
+        },
+        "id": "update_old_execution",
+        "name": "Update Old Execution",
+        "type": "n8n-nodes-base.code",
+        "position": [
+          2864,
+          0
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ (() => {\n  const mode = $json.executionMode || 'full';\n  const modeLabel = mode === 'sync_only' ? '🔄 Sync Only' : '✅ Full Sync';\n  const summary = $json.summary || {};\n  const details = $json.details || {};\n  const action = $json.action || 'NONE';\n  \n  if (action === 'SKIP_API_ERROR') {\n    const msg = '⚠️ <b>Position Sync - API Error</b>\\n\\n' +\n      '🏆 Champion: <b>' + ($json.championName || 'Unknown') + '</b>\\n' +\n      '⚙️ Mode: ' + modeLabel + '\\n\\n' +\n      '🚨 <b>TradeLocker API Error</b>\\n' +\n      'Sync skipped to prevent false closures\\n\\n' +\n      '📊 <b>Virtual State (Real unknown)</b>\\n' +\n      'Virtual: ' + (summary.virtualLongs || 0) + 'L / ' + (summary.virtualShorts || 0) + 'S\\n' +\n      'Open Executions: ' + (summary.openExecutions || 0) + '\\n\\n' +\n      '💡 Will retry on next sync cycle\\n' +\n      '⏰ ' + new Date().toISOString().substring(11,19) + ' UTC';\n    return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n  }\n  \n  const msg = '✅ <b>Position Sync - No Action</b>\\n\\n' +\n    '🏆 Champion: <b>' + ($json.championName || 'Unknown') + '</b>\\n' +\n    '⚙️ Mode: ' + modeLabel + '\\n\\n' +\n    '📊 <b>Current State</b>\\n' +\n    'Virtual: ' + (summary.virtualLongs || 0) + 'L / ' + (summary.virtualShorts || 0) + 'S\\n' +\n    'Real: ' + (summary.realLongs || 0) + 'L / ' + (summary.realShorts || 0) + 'S\\n\\n' +\n    '✨ ' + (details.reason || 'Positions are in sync') + '\\n' +\n    '⏰ ' + new Date().toISOString().substring(11,19) + ' UTC';\n  \n  return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n})() }}",
+          "options": {}
+        },
+        "id": "telegram_no_action",
+        "name": "Telegram No Action",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          2464,
+          176
+        ],
+        "typeVersion": 4.3,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {},
+        "id": "merge_results",
+        "name": "Merge Results",
+        "type": "n8n-nodes-base.merge",
+        "position": [
+          3696,
+          -96
+        ],
+        "typeVersion": 3.2
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/trade_executions",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ (() => { if (!$json.symbol) return '{}'; return JSON.stringify({ symbol: $json.symbol, action: $json.action, side: $json.side, quantity: $json.quantity, price: $json.price, tradelocker_order_id: $json.tradelocker_order_id, tradelocker_position_id: $json.tradelocker_position_id, position_status: $json.position_status, status: $json.status, champion_model_id: $json.champion_model_id, error_message: $json.error_message, executed_at: $json.executed_at }); })() }}",
+          "options": {}
+        },
+        "id": "save_execution",
+        "name": "Save Execution",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          4128,
+          -96
+        ],
+        "typeVersion": 4.3,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ (() => {\n  const d = $json;\n  \n  // Check Valid Data 노드에서 원본 데이터 가져오기\n  let originalData = d;\n  try {\n    originalData = $('Check Valid Data').first().json;\n  } catch(e) {}\n  \n  let slValue = originalData.stopLoss || d.stopLoss;\n  let tpValue = originalData.takeProfit || d.takeProfit;\n  let championName = originalData.championName || d.championName;\n  const summary = originalData.summary || d.summary || {};\n  \n  const actionIcon = d.action === 'OPEN_LONG' ? '🟢' : \n                     d.action === 'OPEN_SHORT' ? '🔴' : \n                     d.action === 'CLOSE_LONG' ? '🟢' : \n                     d.action === 'CLOSE_SHORT' ? '🔴' : '⚪';\n  \n  const statusIcon = d.status === 'FILLED' ? '✅' : '❌';\n  \n  let msg = statusIcon + ' <b>Position Sync Executed</b>\\n\\n';\n  msg += '🏆 Champion: <b>' + (championName || 'Unknown') + '</b>\\n';\n  msg += actionIcon + ' Action: <b>' + d.action + '</b>\\n\\n';\n  \n  msg += '📊 <b>Order Details</b>\\n';\n  msg += '• Symbol: BTCUSD\\n';\n  msg += '• Side: ' + d.side + '\\n';\n  msg += '• Size: ' + d.quantity + ' lot\\n';\n  msg += '• Price: $' + Math.round(originalData.actualPrice || d.price) + '\\n';\n  msg += '• Status: ' + d.status + '\\n';\n  \n  if (d.action && d.action.includes('OPEN') && slValue && tpValue) {\n    msg += '\\n🎯 <b>SL/TP</b>\\n';\n    msg += '• SL: $' + Math.round(slValue) + '\\n';\n    msg += '• TP: $' + Math.round(tpValue) + '\\n';\n    \n    const adjustments = [];\n    if (originalData.slAdjusted) adjustments.push('SL adjusted');\n    if (originalData.tpAdjusted) adjustments.push('TP adjusted');\n    if (originalData.rrAdjusted) adjustments.push('R:R enforced (min 1:1.5)');\n    \n    if (adjustments.length > 0) {\n      msg += '\\n⚙️ <b>Adjustments:</b>\\n';\n      adjustments.forEach(adj => { msg += '• ' + adj + '\\n'; });\n    }\n  }\n  \n  // Sync State (After) - 진입 후에는 +1 표시\n  let vLongs = summary.virtualLongs || 0;\n  let vShorts = summary.virtualShorts || 0;\n  let rLongs = summary.realLongs || 0;\n  let rShorts = summary.realShorts || 0;\n  \n  // OPEN 액션 후에는 Real에 +1\n  if (d.action === 'OPEN_LONG' && d.status === 'FILLED') rLongs += 1;\n  if (d.action === 'OPEN_SHORT' && d.status === 'FILLED') rShorts += 1;\n  // CLOSE 액션 후에는 Real에 -1 (이미 0이면 그대로)\n  if (d.action === 'CLOSE_LONG' && d.status === 'FILLED') rLongs = Math.max(0, rLongs - 1);\n  if (d.action === 'CLOSE_SHORT' && d.status === 'FILLED') rShorts = Math.max(0, rShorts - 1);\n  \n  msg += '\\n📈 <b>Sync State (After)</b>\\n';\n  msg += 'Virtual: ' + vLongs + 'L / ' + vShorts + 'S\\n';\n  msg += 'Real: ' + rLongs + 'L / ' + rShorts + 'S\\n';\n  \n  msg += '\\n⏰ ' + new Date().toISOString().substring(11,19) + ' UTC';\n  \n  return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n})() }}",
+          "options": {}
+        },
+        "id": "telegram_executed",
+        "name": "Telegram Executed",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          4320,
+          -80
+        ],
+        "typeVersion": 4.3,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"chat_id\": \"-1003644771027\",\n  \"parse_mode\": \"HTML\",\n  \"text\": \"⚠️ <b>Trading Disabled</b>\\n\\nReason: {{ $json.reason }}\\n⏰ {{ new Date().toISOString().substring(11,19) }} UTC\"\n}",
+          "options": {}
+        },
+        "id": "telegram_disabled",
+        "name": "Telegram Disabled",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          896,
+          208
+        ],
+        "typeVersion": 4.3,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "url": "https://fapi.binance.com/fapi/v1/ticker/price",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "symbol",
+                "value": "BTCUSDT"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "get_current_price",
+        "name": "Get Current Price",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1216,
+          0
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=https://demo.tradelocker.com/backend-api/trade/positions/{{ $('Prepare Open Save').first().json.tradelocker_position_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Sync Analysis').first().json.accessToken }}"
+              },
+              {
+                "name": "accNum",
+                "value": "={{ $('Sync Analysis').first().json.accNum }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({\n  stopLoss: $('Prepare Open Save').first().json.stopLoss,\n  takeProfit: $('Prepare Open Save').first().json.takeProfit\n}) }}",
+          "options": {}
+        },
+        "id": "set_sltp",
+        "name": "Set SL/TP",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3024,
+          -176
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst staleIds = data.staleExecutionIds || [];\n\nif (staleIds.length === 0) {\n  return [$input.first()];\n}\n\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\n\nlet cleanedCount = 0;\n\nfor (const execId of staleIds) {\n  try {\n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/trade_executions?id=eq.${execId}`,\n      headers: {\n        'apikey': API_KEY,\n        'Authorization': `Bearer ${API_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: { position_status: 'CLOSED', error_message: 'Auto-closed: Position not found in TradeLocker' },\n      json: true\n    });\n    cleanedCount++;\n  } catch(e) {}\n}\n\nreturn [{ json: { ...data, cleanedStaleExecutions: cleanedCount } }];"
+        },
+        "id": "cleanup_stale",
+        "name": "Cleanup Stale Executions",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2064,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// symbol이 없으면 스킵\nconst data = $input.first()?.json;\nif (!data || !data.symbol) {\n  return [];\n}\nreturn [$input.first()];"
+        },
+        "id": "check_valid_data",
+        "name": "Check Valid Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3888,
+          -96
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Set SL/TP 후 Prepare Open Save 데이터 복원\nconst openData = $('Prepare Open Save').first().json;\nconst sltpResult = $input.first().json;\n\nreturn [{\n  json: {\n    ...openData,\n    sltpSet: sltpResult.s === 'ok'\n  }\n}];"
+        },
+        "id": "restore_open_data",
+        "name": "Restore Open Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3360,
+          -176
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// ============================================\n// TP/SL 자동 청산 처리 (TradeLocker History 기반)\n// v2.6 - CLOSE 기록 INSERT 추가\n// ============================================\n\nconst data = $input.first().json;\nconst positions = data.details?.positions || [];\n\nif (positions.length === 0) {\n  return [{ json: { ...data, processed: false, reason: 'No positions to process' } }];\n}\n\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\nconst BASE_URL = 'https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1';\n\nconst results = [];\nlet actualPnlToApply = 0;\nlet actualTradeCount = 0;\nlet actualWinCount = 0;\n\nfor (const pos of positions) {\n  let updated = false;\n  let error = null;\n  let virtualPositionUpdated = false;\n  let alreadyClosed = false;\n  let closeRecordInserted = false;\n  \n  try {\n    // 1. virtual_positions 상태 확인\n    if (pos.virtualPositionId) {\n      const vpRes = await this.helpers.httpRequest({\n        method: 'GET',\n        url: `${BASE_URL}/virtual_positions?id=eq.${pos.virtualPositionId}`,\n        headers: {\n          'apikey': API_KEY,\n          'Authorization': `Bearer ${API_KEY}`\n        },\n        json: true\n      });\n      \n      const vp = vpRes[0];\n      \n      if (vp && vp.status === 'CLOSED') {\n        alreadyClosed = true;\n      } else if (vp && vp.status === 'OPEN') {\n        await this.helpers.httpRequest({\n          method: 'PATCH',\n          url: `${BASE_URL}/virtual_positions?id=eq.${pos.virtualPositionId}`,\n          headers: {\n            'apikey': API_KEY,\n            'Authorization': `Bearer ${API_KEY}`,\n            'Content-Type': 'application/json',\n            'Prefer': 'return=minimal'\n          },\n          body: {\n            status: 'CLOSED',\n            closed_at: new Date().toISOString(),\n            close_price: pos.closedPrice,\n            realized_pnl: pos.netPnl\n          },\n          json: true\n        });\n        virtualPositionUpdated = true;\n        \n        actualPnlToApply += (parseFloat(pos.netPnl) || 0);\n        actualTradeCount += 1;\n        if ((parseFloat(pos.netPnl) || 0) > 0) actualWinCount += 1;\n      }\n    }\n    \n    // 2. trade_executions - 기존 OPEN 기록 PATCH\n    if (pos.executionId) {\n      await this.helpers.httpRequest({\n        method: 'PATCH',\n        url: `${BASE_URL}/trade_executions?id=eq.${pos.executionId}`,\n        headers: {\n          'apikey': API_KEY,\n          'Authorization': `Bearer ${API_KEY}`,\n          'Content-Type': 'application/json',\n          'Prefer': 'return=minimal'\n        },\n        body: {\n          position_status: 'CLOSED'\n        },\n        json: true\n      });\n    }\n    \n    // 3. NEW: trade_executions - CLOSE 기록 INSERT\n    if (!alreadyClosed) {\n      const closeAction = pos.side === 'LONG' ? 'CLOSE_LONG' : 'CLOSE_SHORT';\n      const closeSide = pos.side === 'LONG' ? 'buy' : 'sell';\n      \n      await this.helpers.httpRequest({\n        method: 'POST',\n        url: `${BASE_URL}/trade_executions`,\n        headers: {\n          'apikey': API_KEY,\n          'Authorization': `Bearer ${API_KEY}`,\n          'Content-Type': 'application/json',\n          'Prefer': 'return=minimal'\n        },\n        body: {\n          symbol: 'BTCUSD',\n          action: closeAction,\n          side: closeSide,\n          quantity: pos.quantity,\n          price: pos.closedPrice,\n          tradelocker_position_id: pos.positionId,\n          position_status: 'CLOSED',\n          status: 'FILLED',\n          champion_model_id: data.championModelId,\n          error_message: `Auto-closed by ${pos.closedBy} at $${pos.closedPrice}`,\n          executed_at: new Date().toISOString()\n        },\n        json: true\n      });\n      closeRecordInserted = true;\n    }\n    \n    updated = true;\n  } catch(e) {\n    error = e.message;\n  }\n  \n  results.push({ ...pos, updated, error, virtualPositionUpdated, alreadyClosed, closeRecordInserted });\n}\n\n// 4. virtual_portfolios 잔고 업데이트\nconst portfolioId = data.championPortfolioId;\nlet portfolioUpdated = false;\nlet balanceAlreadyUpdated = false;\nlet newBalance = parseFloat(data.championCurrentBalance);\n\nif (portfolioId && actualPnlToApply !== 0 && actualTradeCount > 0) {\n  try {\n    const portfolioRes = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${BASE_URL}/virtual_portfolios?id=eq.${portfolioId}`,\n      headers: {\n        'apikey': API_KEY,\n        'Authorization': `Bearer ${API_KEY}`\n      },\n      json: true\n    });\n    \n    const portfolio = portfolioRes[0];\n    const currentBalance = parseFloat(portfolio?.current_balance) || 10000;\n    const currentTrades = parseInt(portfolio?.total_trades) || 0;\n    const currentWins = parseInt(portfolio?.winning_trades) || 0;\n    const currentRealizedPnl = parseFloat(portfolio?.realized_pnl) || 0;\n    \n    newBalance = currentBalance + actualPnlToApply;\n    \n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `${BASE_URL}/virtual_portfolios?id=eq.${portfolioId}`,\n      headers: {\n        'apikey': API_KEY,\n        'Authorization': `Bearer ${API_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: {\n        current_balance: Math.round(newBalance * 100) / 100,\n        realized_pnl: Math.round((currentRealizedPnl + actualPnlToApply) * 100) / 100,\n        total_trades: currentTrades + actualTradeCount,\n        winning_trades: currentWins + actualWinCount,\n        updated_at: new Date().toISOString()\n      },\n      json: true\n    });\n    \n    portfolioUpdated = true;\n  } catch(e) {}\n} else {\n  balanceAlreadyUpdated = true;\n}\n\nconst totalPnl = positions.reduce((sum, p) => sum + (parseFloat(p.netPnl) || 0), 0);\nconst alreadyClosedCount = results.filter(r => r.alreadyClosed).length;\nconst closeRecordsInserted = results.filter(r => r.closeRecordInserted).length;\n\nreturn [{\n  json: {\n    action: 'AUTO_CLOSED_BY_SLTP',\n    championName: data.championName,\n    championModelId: data.championModelId,\n    processedPositions: results,\n    totalPnl: Math.round(totalPnl * 100) / 100,\n    actualPnlApplied: Math.round(actualPnlToApply * 100) / 100,\n    previousBalance: parseFloat(data.championCurrentBalance),\n    newBalance: Math.round(newBalance * 100) / 100,\n    positionsCount: positions.length,\n    alreadyClosedCount: alreadyClosedCount,\n    actuallyProcessedCount: actualTradeCount,\n    closeRecordsInserted: closeRecordsInserted,\n    winsCount: actualWinCount,\n    portfolioUpdated,\n    balanceAlreadyUpdated,\n    summary: data.summary\n  }\n}];"
+        },
+        "id": "process_auto_closed",
+        "name": "Process Auto Closed",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2464,
+          352
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ (() => {\n  const d = $json;\n  const positions = d.processedPositions || [];\n  \n  let posDetails = '';\n  for (const p of positions) {\n    let icon = '🤖';\n    if (p.closedBy === 'TP') icon = '🎯';\n    else if (p.closedBy === 'SL') icon = '🛑';\n    \n    const pnlIcon = (p.netPnl || 0) >= 0 ? '💰' : '💸';\n    const entry = p.entryPrice ? Math.round(p.entryPrice) : 0;\n    const closed = p.closedPrice ? Math.round(p.closedPrice) : 0;\n    const pnl = p.netPnl ? p.netPnl.toFixed(2) : '0.00';\n    posDetails += icon + ' ' + p.side + ' @ $' + entry + ' -> $' + closed + '\\n';\n    posDetails += '   ' + pnlIcon + ' P&L: $' + pnl + ' (' + p.closedBy + ')\\n';\n  }\n  \n  const totalIcon = (d.totalPnl || 0) >= 0 ? '✅' : '❌';\n  const totalPnl = d.totalPnl ? d.totalPnl.toFixed(2) : '0.00';\n  const prevBal = d.previousBalance ? d.previousBalance.toFixed(2) : '0.00';\n  const newBal = d.newBalance ? d.newBalance.toFixed(2) : '0.00';\n  \n  let balanceNote = '';\n  if (d.balanceAlreadyUpdated) {\n    balanceNote = '\\n⚠️ Balance already updated';\n  }\n  \n  const hasAIDecision = positions.some(p => p.closedBy === 'AI_DECISION');\n  const hasSLTP = positions.some(p => p.closedBy === 'SL' || p.closedBy === 'TP');\n  let title = '🔄 <b>Auto-Closed';\n  if (hasAIDecision && !hasSLTP) title += ' by AI Decision';\n  else if (hasSLTP && !hasAIDecision) title += ' by SL/TP';\n  else title += '</b>';\n  title += '</b>';\n  \n  const msg = title + '\\n\\n' +\n    '🏆 Champion: <b>' + (d.championName || 'Unknown') + '</b>\\n\\n' +\n    '📊 <b>Closed Positions (' + (d.positionsCount || 0) + ')</b>\\n' +\n    posDetails + '\\n' +\n    totalIcon + ' <b>Total P&L: $' + totalPnl + '</b>\\n\\n' +\n    '💼 Balance: $' + prevBal + ' -> $' + newBal + balanceNote + '\\n\\n' +\n    '⏰ ' + new Date().toISOString().substring(11,19) + ' UTC';\n  \n  return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n})() }}",
+          "options": {}
+        },
+        "id": "telegram_auto_closed",
+        "name": "Telegram Auto Closed",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          2688,
+          352
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "// ============================================\n// TradeLocker Lot Step Validator & Rounder\n// BTCUSD Lot Step = 0.01 BTC\n// ============================================\n\nconst LOT_STEP = 0.01;\nconst MIN_QUANTITY = 0.01;\nconst MAX_QUANTITY = 1.0;\n\nfor (const item of $input.all()) {\n  const originalQuantity = parseFloat(item.json.quantity || 0);\n  \n  if (originalQuantity <= 0) {\n    item.json.quantity = MIN_QUANTITY;\n    item.json.quantity_adjusted = true;\n    item.json.quantity_original = originalQuantity;\n    continue;\n  }\n  \n  // Round to nearest lot step\n  const rounded = Math.round(originalQuantity / LOT_STEP) * LOT_STEP;\n  \n  // Apply min/max constraints\n  let finalQuantity = Math.max(MIN_QUANTITY, Math.min(MAX_QUANTITY, rounded));\n  \n  // Fix floating point precision issues\n  finalQuantity = parseFloat(finalQuantity.toFixed(2));\n  \n  // Mark if adjusted\n  if (Math.abs(finalQuantity - originalQuantity) > 0.001) {\n    item.json.quantity_adjusted = true;\n    item.json.quantity_original = originalQuantity;\n  } else {\n    item.json.quantity_adjusted = false;\n  }\n  \n  item.json.quantity = finalQuantity;\n}\n\nreturn $input.all();"
+        },
+        "id": "8ea75498-9a97-4124-a090-94400edff815",
+        "name": "Round Quantity to Lot Step",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 1,
+        "position": [
+          2352,
+          -176
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Schedule 트리거에서 실행 시 sync_only 모드 설정\n// 청산 동기화만 수행, 새 포지션 오픈 안함\nreturn [{ json: { mode: 'sync_only' } }];"
+        },
+        "id": "set_sync_mode",
+        "name": "Set Sync Only Mode",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          112,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes"
+              }
+            ]
+          }
+        },
+        "id": "trigger",
+        "name": "Every5 Minutes",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "position": [
+          0,
+          0
+        ],
+        "typeVersion": 1.3
+      },
+      {
+        "parameters": {
+          "url": "=https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/ai_decisions?model_id=eq.{{ $('Get Champion Portfolio').first().json.model_id }}&order=created_at.desc&limit=1",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "get_champion_decision",
+        "name": "Get Champion Recent Decision",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1568,
+          112
+        ]
+      }
+    ],
+    "connections": {
+      "Called from AI Engine": {
+        "main": [
+          [
+            {
+              "node": "Get System Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get System Config": {
+        "main": [
+          [
+            {
+              "node": "Check Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Config": {
+        "main": [
+          [
+            {
+              "node": "Trading Enabled?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trading Enabled?": {
+        "main": [
+          [
+            {
+              "node": "Get TL Account",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram Disabled",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get TL Account": {
+        "main": [
+          [
+            {
+              "node": "Get TL Positions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get TL Positions": {
+        "main": [
+          [
+            {
+              "node": "Get Current Price",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Current Price": {
+        "main": [
+          [
+            {
+              "node": "Get Champion Portfolio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Champion Portfolio": {
+        "main": [
+          [
+            {
+              "node": "Get Champion Virtual Positions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Champion Virtual Positions": {
+        "main": [
+          [
+            {
+              "node": "Get Champion Recent Decision",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get AI Open Executions": {
+        "main": [
+          [
+            {
+              "node": "Sync Analysis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sync Analysis": {
+        "main": [
+          [
+            {
+              "node": "Cleanup Stale Executions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cleanup Stale Executions": {
+        "main": [
+          [
+            {
+              "node": "Switch Action",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch Action": {
+        "main": [
+          [
+            {
+              "node": "Round Quantity to Lot Step",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Close Position Order",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram No Action",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Process Auto Closed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Open Position Order": {
+        "main": [
+          [
+            {
+              "node": "Wait 2s",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 2s": {
+        "main": [
+          [
+            {
+              "node": "Get New Position",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get New Position": {
+        "main": [
+          [
+            {
+              "node": "Prepare Open Save",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Open Save": {
+        "main": [
+          [
+            {
+              "node": "Set SL/TP",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set SL/TP": {
+        "main": [
+          [
+            {
+              "node": "Restore Open Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Restore Open Data": {
+        "main": [
+          [
+            {
+              "node": "Merge Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Close Position Order": {
+        "main": [
+          [
+            {
+              "node": "Prepare Close Save",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Close Save": {
+        "main": [
+          [
+            {
+              "node": "Update Old Execution",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Old Execution": {
+        "main": [
+          [
+            {
+              "node": "Merge Results",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Results": {
+        "main": [
+          [
+            {
+              "node": "Check Valid Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Valid Data": {
+        "main": [
+          [
+            {
+              "node": "Save Execution",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Execution": {
+        "main": [
+          [
+            {
+              "node": "Telegram Executed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Process Auto Closed": {
+        "main": [
+          [
+            {
+              "node": "Telegram Auto Closed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Round Quantity to Lot Step": {
+        "main": [
+          [
+            {
+              "node": "Open Position Order",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set Sync Only Mode": {
+        "main": [
+          [
+            {
+              "node": "Get System Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Every5 Minutes": {
+        "main": [
+          [
+            {
+              "node": "Set Sync Only Mode",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Champion Recent Decision": {
+        "main": [
+          [
+            {
+              "node": "Get AI Open Executions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "saveDataErrorExecution": "all",
+      "saveDataSuccessExecution": "all",
+      "saveManualExecutions": true,
+      "saveExecutionProgress": true,
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false,
+      "errorWorkflow": "s90lTAdKG3PBwk39"
+    },
+    "staticData": {
+      "node:Every 3 Minutes": {
+        "recurrenceRules": []
+      },
+      "node:Every 15 Minutes": {
+        "recurrenceRules": []
+      },
+      "node:Every5 Minutes": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "c6e88aeb-9967-4c89-b08c-902eb2ebad2d",
+    "activeVersionId": "c6e88aeb-9967-4c89-b08c-902eb2ebad2d",
+    "versionCounter": 311,
+    "triggerCount": 1,
+    "shared": [
+      {
+        "updatedAt": "2026-01-09T01:42:20.784Z",
+        "createdAt": "2026-01-09T01:42:20.784Z",
+        "role": "workflow:owner",
+        "workflowId": "5bb1OZByz68VWaK8",
+        "projectId": "SWbkWL2WyvWazGwe",
+        "project": {
+          "updatedAt": "2025-12-13T16:56:01.249Z",
+          "createdAt": "2025-12-13T16:53:50.953Z",
+          "id": "SWbkWL2WyvWazGwe",
+          "name": "Geunsoo Park <simgokr@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-13T16:53:50.954Z",
+              "createdAt": "2025-12-13T16:53:50.954Z",
+              "userId": "dfe8ff54-78cf-444e-bad5-3e03cbd87410",
+              "projectId": "SWbkWL2WyvWazGwe",
+              "user": {
+                "updatedAt": "2026-01-28T11:00:08.000Z",
+                "createdAt": "2025-12-13T16:53:20.025Z",
+                "id": "dfe8ff54-78cf-444e-bad5-3e03cbd87410",
+                "email": "simgokr@gmail.com",
+                "firstName": "Geunsoo",
+                "lastName": "Park",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-13T16:56:33.795Z",
+                  "personalization_survey_n8n_version": "1.123.5",
+                  "companySize": "<20",
+                  "companyType": "saas",
+                  "role": "business-owner",
+                  "reportedSource": "google"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "lay7KqSBwQi5SgoJ",
+                  "userActivatedAt": 1765718149154,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1767899459009
+                  }
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-01-28",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "activeVersion": {
+      "updatedAt": "2026-01-28T11:01:02.334Z",
+      "createdAt": "2026-01-28T11:01:02.334Z",
+      "versionId": "c6e88aeb-9967-4c89-b08c-902eb2ebad2d",
+      "workflowId": "5bb1OZByz68VWaK8",
+      "nodes": [
+        {
+          "parameters": {
+            "inputSource": "passthrough"
+          },
+          "id": "workflow_trigger",
+          "name": "Called from AI Engine",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "typeVersion": 1.1,
+          "position": [
+            0,
+            208
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "system_config",
+            "returnAll": true
+          },
+          "id": "get_config",
+          "name": "Get System Config",
+          "type": "n8n-nodes-base.supabase",
+          "position": [
+            224,
+            112
+          ],
+          "typeVersion": 1,
+          "credentials": {
+            "supabaseApi": {
+              "id": "1WUP90pAaSuxQoxn",
+              "name": "Supabase account 2"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "jsCode": "const configs = $input.all().map(i => i.json);\nconst tokenConfig = configs.find(c => c.key === 'tradelocker_access_token');\nconst tradingEnabled = configs.find(c => c.key === 'is_trading_enabled');\n\nif (!tradingEnabled || tradingEnabled.value === false || tradingEnabled.value === 'false') {\n  return [{ json: { skip: true, reason: 'Trading is disabled' } }];\n}\n\nif (!tokenConfig) {\n  return [{ json: { skip: true, reason: 'No access token' } }];\n}\n\nlet accessToken = tokenConfig.value;\ntry { accessToken = JSON.parse(accessToken); } catch(e) {}\n\nreturn [{ json: { skip: false, accessToken, allConfigs: configs } }];"
+          },
+          "id": "check_config",
+          "name": "Check Config",
+          "type": "n8n-nodes-base.code",
+          "position": [
+            448,
+            112
+          ],
+          "typeVersion": 2
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "version": 2,
+                "leftValue": "",
+                "caseSensitive": true,
+                "typeValidation": "strict"
+              },
+              "combinator": "and",
+              "conditions": [
+                {
+                  "id": "1",
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "false",
+                    "singleValue": true
+                  },
+                  "leftValue": "={{ $json.skip }}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "if_trading_enabled",
+          "name": "Trading Enabled?",
+          "type": "n8n-nodes-base.if",
+          "position": [
+            672,
+            112
+          ],
+          "typeVersion": 2.3
+        },
+        {
+          "parameters": {
+            "url": "https://demo.tradelocker.com/backend-api/auth/jwt/all-accounts",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{ $('Check Config').first().json.accessToken }}"
+                },
+                {
+                  "name": "accNum",
+                  "value": "0"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "get_account",
+          "name": "Get TL Account",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            896,
+            0
+          ],
+          "typeVersion": 4.3,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "url": "=https://demo.tradelocker.com/backend-api/trade/accounts/{{ $('Get TL Account').first().json.accounts[0].id }}/positions",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{ $('Check Config').first().json.accessToken }}"
+                },
+                {
+                  "name": "accNum",
+                  "value": "={{ $('Get TL Account').first().json.accounts[0].accNum }}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "get_tl_positions",
+          "name": "Get TL Positions",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            1056,
+            0
+          ],
+          "typeVersion": 4.3,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_portfolios?is_champion=eq.true&select=*,ai_models(name)",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                },
+                {
+                  "name": "Authorization",
+                  "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "get_champion",
+          "name": "Get Champion Portfolio",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            1392,
+            0
+          ],
+          "typeVersion": 4.3
+        },
+        {
+          "parameters": {
+            "url": "=https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/virtual_positions?status=eq.OPEN&model_id=eq.{{ $('Get Champion Portfolio').first().json.model_id }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                },
+                {
+                  "name": "Authorization",
+                  "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "get_champion_positions",
+          "name": "Get Champion Virtual Positions",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            1568,
+            0
+          ],
+          "typeVersion": 4.3,
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/trade_executions?position_status=eq.OPEN",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                },
+                {
+                  "name": "Authorization",
+                  "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "get_ai_executions",
+          "name": "Get AI Open Executions",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            1760,
+            0
+          ],
+          "typeVersion": 4.3,
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "// ============================================\n// POSITION SYNC LOGIC v2.7 - Champion decision takes priority\n// Champion's current round decision takes priority over opened_as_champion flag\n// ============================================\n\nlet executionMode = 'full';\ntry {\n  const inputData = $('Called from AI Engine').first().json;\n  if (inputData && inputData.mode) executionMode = inputData.mode;\n} catch(e) {}\n\ntry {\n  const scheduleData = $('Set Sync Only Mode').first().json;\n  if (scheduleData && scheduleData.mode) executionMode = scheduleData.mode;\n} catch(e) {}\n\nconst championData = $('Get Champion Portfolio').first().json;\nconst champion = Array.isArray(championData) ? championData[0] : championData;\n\nconst positionsData = $('Get Champion Virtual Positions').all().map(i => i.json);\nconst championVirtualPositions = positionsData.flat().filter(p => p && p.id);\n\n// Get champion's recent decision (for logging only)\nlet championDecision = null;\nlet championDecisionTime = null;\ntry {\n  const decisionData = $('Get Champion Recent Decision').first().json;\n  const decisions = Array.isArray(decisionData) ? decisionData : [decisionData];\n  if (decisions.length > 0 && decisions[0]) {\n    championDecision = decisions[0].action;\n    championDecisionTime = decisions[0].created_at;\n  }\n} catch(e) {}\n\nconst aiExecutions = $('Get AI Open Executions').all().map(i => i.json).filter(e => e && e.id);\nconst tlPositionsData = $('Get TL Positions').first().json;\nconst accountData = $('Get TL Account').first().json;\nconst config = $('Check Config').first().json;\n\n// ========== API ERROR CHECK ==========\nconst hasApiError = tlPositionsData.error || \n                   tlPositionsData.status >= 500 ||\n                   (tlPositionsData.message && tlPositionsData.message.includes('504')) ||\n                   (tlPositionsData.message && tlPositionsData.message.includes('timeout'));\n\nif (hasApiError) {\n  const championName = champion?.ai_models?.name || 'Unknown';\n  return [{\n    json: {\n      action: 'SKIP_API_ERROR',\n      reason: 'TradeLocker API error - skipping sync to prevent false closures',\n      errorDetails: tlPositionsData.error?.message || tlPositionsData.message || 'Unknown API error',\n      executionMode,\n      championName,\n      championModelId: champion?.model_id,\n      championPortfolioId: champion?.id,\n      championCurrentBalance: parseFloat(champion?.current_balance) || 10000,\n      championDecision,\n      currentPrice: 0,\n      staleExecutionIds: [],\n      summary: {\n        virtualLongs: championVirtualPositions.filter(p => p.side === 'LONG' && p.status === 'OPEN').length,\n        virtualShorts: championVirtualPositions.filter(p => p.side === 'SHORT' && p.status === 'OPEN').length,\n        realLongs: -1,\n        realShorts: -1,\n        staleExecutions: 0,\n        openExecutions: aiExecutions.filter(e => e.position_status === 'OPEN').length,\n        orphanedPosition: false,\n        orphanedPositionSide: null,\n        championDecision,\n        apiError: true\n      }\n    }\n  }];\n}\n\nlet currentPrice = 0;\ntry {\n  const priceData = $('Get Current Price').first().json;\n  currentPrice = parseFloat(priceData.price) || 0;\n} catch(e) {}\n\nconst MIN_TP_DISTANCE = 360;\nconst MIN_SL_DISTANCE = 240;\nconst MIN_RISK_REWARD = 1.5;\n\nconst rawPositions = tlPositionsData.d?.positions || tlPositionsData.positions || [];\nconst tlPositions = rawPositions.map(p => {\n  if (Array.isArray(p)) {\n    return {\n      id: String(p[0]),\n      instrumentId: String(p[1]),\n      side: p[3],\n      qty: parseFloat(p[4]) || 0,\n      avgPrice: parseFloat(p[5]) || 0,\n      stopLoss: p[9] ? parseFloat(p[9]) : null,\n      takeProfit: p[10] ? parseFloat(p[10]) : null\n    };\n  }\n  return { ...p, id: String(p.id), stopLoss: p.stopLoss || null, takeProfit: p.takeProfit || null };\n});\n\nconst btcTLPositions = tlPositions.filter(p => String(p.tradableInstrumentId || p.instrumentId) === '9503');\nconst realPositionIds = btcTLPositions.map(p => String(p.id));\nconst account = accountData.accounts?.[0] || {};\n\nconst staleExecutions = aiExecutions.filter(e => \n  e.position_status === 'OPEN' && \n  e.tradelocker_position_id &&\n  !realPositionIds.includes(String(e.tradelocker_position_id))\n);\n\nconst championName = champion?.ai_models?.name || 'Unknown';\nconst championModelId = champion?.model_id;\n\nif (!championModelId) {\n  return [{ json: { action: 'NONE', reason: 'No champion model found', executionMode, championName, currentPrice, staleExecutionIds: staleExecutions.map(e => e.id) } }];\n}\n\nconst virtualLongs = championVirtualPositions.filter(p => p.side === 'LONG' && p.status === 'OPEN');\nconst virtualShorts = championVirtualPositions.filter(p => p.side === 'SHORT' && p.status === 'OPEN');\nconst realLongs = btcTLPositions.filter(p => p.side === 'buy');\nconst realShorts = btcTLPositions.filter(p => p.side === 'sell');\n\nconst openExecutions = aiExecutions.filter(e => e.position_status === 'OPEN');\nlet orphanedPosition = null;\nlet orphanedPositionSide = null;\n\nif (btcTLPositions.length > 0) {\n  for (const tlPos of btcTLPositions) {\n    const matchingExec = openExecutions.find(e => \n      String(e.tradelocker_position_id) === String(tlPos.id)\n    );\n    if (!matchingExec) {\n      orphanedPosition = tlPos;\n      orphanedPositionSide = tlPos.side === 'buy' ? 'LONG' : 'SHORT';\n      break;\n    }\n  }\n}\n\nlet syncAction = 'NONE';\nlet syncDetails = {};\n\nif (orphanedPosition) {\n  const matchingVirtual = orphanedPositionSide === 'LONG' ? virtualLongs[0] : virtualShorts[0];\n  \n  if (!matchingVirtual) {\n    syncAction = orphanedPositionSide === 'LONG' ? 'CLOSE_LONG' : 'CLOSE_SHORT';\n    syncDetails = {\n      reason: 'Orphaned position - no matching virtual position for current champion',\n      positionId: orphanedPosition.id,\n      quantity: orphanedPosition.qty,\n      avgPrice: orphanedPosition.avgPrice,\n      currentPrice: currentPrice,\n      orphanedSide: orphanedPositionSide\n    };\n  } else if (!orphanedPosition.stopLoss || !orphanedPosition.takeProfit) {\n    syncAction = orphanedPositionSide === 'LONG' ? 'CLOSE_LONG' : 'CLOSE_SHORT';\n    syncDetails = {\n      reason: 'Orphaned position missing SL/TP - closing for resync',\n      positionId: orphanedPosition.id,\n      quantity: orphanedPosition.qty,\n      avgPrice: orphanedPosition.avgPrice,\n      currentPrice: currentPrice,\n      orphanedSide: orphanedPositionSide\n    };\n  } else {\n    syncAction = 'NONE';\n    syncDetails = { \n      reason: 'Orphaned position accepted - direction matches and SL/TP set',\n      positionId: orphanedPosition.id,\n      side: orphanedPositionSide\n    };\n  }\n}\nelse if (staleExecutions.length > 0) {\n  const processedPositionIds = new Set();\n  const autoClosedPositions = [];\n  \n  for (const staleExec of staleExecutions) {\n    const positionId = String(staleExec.tradelocker_position_id);\n    if (processedPositionIds.has(positionId)) continue;\n    processedPositionIds.add(positionId);\n    \n    const side = staleExec.side === 'buy' ? 'LONG' : 'SHORT';\n    const entryPrice = parseFloat(staleExec.price) || 0;\n    const qty = parseFloat(staleExec.quantity) || 0.03;\n    const leverage = 5;\n    const ROUND_TRIP_FEE = 3.18;\n    \n    const matchingVPos = championVirtualPositions.find(vp => \n      vp.side === side && vp.status === 'OPEN'\n    );\n    \n    const actualSL = matchingVPos ? parseFloat(matchingVPos.stop_loss) : null;\n    const actualTP = matchingVPos ? parseFloat(matchingVPos.take_profit) : null;\n    \n    let closedBy = 'AI_DECISION';\n    let closedPrice = currentPrice;\n    \n    if (side === 'LONG') {\n      if (actualTP && currentPrice >= actualTP) {\n        closedBy = 'TP';\n        closedPrice = actualTP;\n      } else if (actualSL && currentPrice <= actualSL) {\n        closedBy = 'SL';\n        closedPrice = actualSL;\n      }\n    } else {\n      if (actualTP && currentPrice <= actualTP) {\n        closedBy = 'TP';\n        closedPrice = actualTP;\n      } else if (actualSL && currentPrice >= actualSL) {\n        closedBy = 'SL';\n        closedPrice = actualSL;\n      }\n    }\n    \n    let grossPnl = side === 'LONG'\n      ? (closedPrice - entryPrice) * qty * leverage\n      : (entryPrice - closedPrice) * qty * leverage;\n    const netPnl = grossPnl - ROUND_TRIP_FEE;\n    \n    autoClosedPositions.push({\n      executionId: staleExec.id,\n      positionId: positionId,\n      side: side,\n      entryPrice,\n      closedPrice,\n      closedBy,\n      quantity: qty,\n      leverage,\n      grossPnl: Math.round(grossPnl * 100) / 100,\n      netPnl: Math.round(netPnl * 100) / 100,\n      actualSL,\n      actualTP,\n      virtualPositionId: matchingVPos?.id || null\n    });\n  }\n  \n  if (autoClosedPositions.length > 0) {\n    syncAction = 'AUTO_CLOSED_BY_SLTP';\n    syncDetails = {\n      positions: autoClosedPositions,\n      totalPnl: autoClosedPositions.reduce((sum, p) => sum + p.netPnl, 0)\n    };\n  }\n}\nelse if (executionMode === 'sync_only') {\n  syncAction = 'NONE';\n  syncDetails = { reason: 'Sync only mode - no position changes', executionMode };\n}\n// ========== v2.7: Champion decision takes priority ==========\n// 1. 챔피언이 이번 라운드에 OPEN 결정을 내렸다면 즉시 실행 (opened_as_champion 무관)\nelse if (championDecision === 'OPEN_LONG' && realLongs.length === 0 && realShorts.length === 0 && virtualLongs.length > 0) {\n  const vPos = virtualLongs[0];\n  const rawSL = parseFloat(vPos.stop_loss) || null;\n  const rawTP = parseFloat(vPos.take_profit) || null;\n  const { stopLoss, takeProfit, slAdjusted, tpAdjusted, rrAdjusted } = validateAndFixSLTP('buy', rawSL, rawTP, currentPrice);\n  \n  syncAction = 'OPEN_LONG';\n  syncDetails = {\n    side: 'buy',\n    quantity: parseFloat(vPos.quantity) || 0.02,\n    stopLoss, takeProfit,\n    originalSL: rawSL, originalTP: rawTP,\n    slAdjusted, tpAdjusted, rrAdjusted,\n    virtualPositionId: vPos.id,\n    triggeredByChampionDecision: true,\n    championDecision: championDecision\n  };\n}\nelse if (championDecision === 'OPEN_SHORT' && realShorts.length === 0 && realLongs.length === 0 && virtualShorts.length > 0) {\n  const vPos = virtualShorts[0];\n  const rawSL = parseFloat(vPos.stop_loss) || null;\n  const rawTP = parseFloat(vPos.take_profit) || null;\n  const { stopLoss, takeProfit, slAdjusted, tpAdjusted, rrAdjusted } = validateAndFixSLTP('sell', rawSL, rawTP, currentPrice);\n  \n  syncAction = 'OPEN_SHORT';\n  syncDetails = {\n    side: 'sell',\n    quantity: parseFloat(vPos.quantity) || 0.02,\n    stopLoss, takeProfit,\n    originalSL: rawSL, originalTP: rawTP,\n    slAdjusted, tpAdjusted, rrAdjusted,\n    virtualPositionId: vPos.id,\n    triggeredByChampionDecision: true,\n    championDecision: championDecision\n  };\n}\n// 2. 챔피언 결정이 없을 때만 기존 포지션 동기화 (opened_as_champion 체크)\nelse if (virtualLongs.length > 0 && realLongs.length === 0 && realShorts.length === 0) {\n  const vPos = virtualLongs[0];\n  \n  // 기존 포지션 동기화는 opened_as_champion 필요\n  if (vPos.opened_as_champion !== true) {\n    syncAction = 'NONE';\n    syncDetails = { \n      reason: 'Virtual LONG exists but no champion decision and not opened as champion - skipping sync',\n      virtualPositionId: vPos.id,\n      opened_as_champion: vPos.opened_as_champion,\n      championDecision: championDecision,\n      skippedSync: true\n    };\n  } else {\n    const rawSL = parseFloat(vPos.stop_loss) || null;\n    const rawTP = parseFloat(vPos.take_profit) || null;\n    const { stopLoss, takeProfit, slAdjusted, tpAdjusted, rrAdjusted } = validateAndFixSLTP('buy', rawSL, rawTP, currentPrice);\n    \n    syncAction = 'OPEN_LONG';\n    syncDetails = {\n      side: 'buy',\n      quantity: parseFloat(vPos.quantity) || 0.02,\n      stopLoss, takeProfit,\n      originalSL: rawSL, originalTP: rawTP,\n      slAdjusted, tpAdjusted, rrAdjusted,\n      virtualPositionId: vPos.id,\n      triggeredByVirtualPosition: true,\n      opened_as_champion: true\n    };\n  }\n}\nelse if (virtualShorts.length > 0 && realShorts.length === 0 && realLongs.length === 0) {\n  const vPos = virtualShorts[0];\n  \n  // 기존 포지션 동기화는 opened_as_champion 필요\n  if (vPos.opened_as_champion !== true) {\n    syncAction = 'NONE';\n    syncDetails = { \n      reason: 'Virtual SHORT exists but no champion decision and not opened as champion - skipping sync',\n      virtualPositionId: vPos.id,\n      opened_as_champion: vPos.opened_as_champion,\n      championDecision: championDecision,\n      skippedSync: true\n    };\n  } else {\n    const rawSL = parseFloat(vPos.stop_loss) || null;\n    const rawTP = parseFloat(vPos.take_profit) || null;\n    const { stopLoss, takeProfit, slAdjusted, tpAdjusted, rrAdjusted } = validateAndFixSLTP('sell', rawSL, rawTP, currentPrice);\n    \n    syncAction = 'OPEN_SHORT';\n    syncDetails = {\n      side: 'sell',\n      quantity: parseFloat(vPos.quantity) || 0.02,\n      stopLoss, takeProfit,\n      originalSL: rawSL, originalTP: rawTP,\n      slAdjusted, tpAdjusted, rrAdjusted,\n      virtualPositionId: vPos.id,\n      triggeredByVirtualPosition: true,\n      opened_as_champion: true\n    };\n  }\n}\n// ========== END v2.7 ==========\nelse if (virtualLongs.length > 0 && realShorts.length > 0) {\n  const realPos = realShorts[0];\n  syncAction = 'CLOSE_SHORT';\n  syncDetails = {\n    reason: 'Direction mismatch - champion wants LONG but SHORT exists',\n    positionId: realPos.id,\n    quantity: realPos.qty,\n    avgPrice: realPos.avgPrice,\n    currentPrice: currentPrice,\n    nextAction: 'OPEN_LONG'\n  };\n}\nelse if (virtualShorts.length > 0 && realLongs.length > 0) {\n  const realPos = realLongs[0];\n  syncAction = 'CLOSE_LONG';\n  syncDetails = {\n    reason: 'Direction mismatch - champion wants SHORT but LONG exists',\n    positionId: realPos.id,\n    quantity: realPos.qty,\n    avgPrice: realPos.avgPrice,\n    currentPrice: currentPrice,\n    nextAction: 'OPEN_SHORT'\n  };\n}\nelse if (virtualLongs.length === 0 && virtualShorts.length === 0 && (realLongs.length > 0 || realShorts.length > 0)) {\n  if (realLongs.length > 0) {\n    const realPos = realLongs[0];\n    syncAction = 'CLOSE_LONG';\n    syncDetails = {\n      reason: 'Champion has no position but LONG exists in TL',\n      positionId: realPos.id,\n      quantity: realPos.qty,\n      avgPrice: realPos.avgPrice,\n      currentPrice: currentPrice\n    };\n  } else {\n    const realPos = realShorts[0];\n    syncAction = 'CLOSE_SHORT';\n    syncDetails = {\n      reason: 'Champion has no position but SHORT exists in TL',\n      positionId: realPos.id,\n      quantity: realPos.qty,\n      avgPrice: realPos.avgPrice,\n      currentPrice: currentPrice\n    };\n  }\n}\nelse {\n  syncAction = 'NONE';\n  syncDetails = { reason: 'Already in sync' };\n}\n\nfunction validateAndFixSLTP(side, sl, tp, price) {\n  let finalSL = sl;\n  let finalTP = tp;\n  let slAdjusted = false;\n  let tpAdjusted = false;\n  let rrAdjusted = false;\n  \n  if (side === 'buy') {\n    const minSL = price - MIN_SL_DISTANCE;\n    if (!finalSL || finalSL >= price || (price - finalSL) < MIN_SL_DISTANCE) {\n      finalSL = minSL;\n      slAdjusted = true;\n    }\n    const minTP = price + MIN_TP_DISTANCE;\n    if (!finalTP || finalTP <= price || (finalTP - price) < MIN_TP_DISTANCE) {\n      finalTP = minTP;\n      tpAdjusted = true;\n    }\n  } else {\n    const minSL = price + MIN_SL_DISTANCE;\n    if (!finalSL || finalSL <= price || (finalSL - price) < MIN_SL_DISTANCE) {\n      finalSL = minSL;\n      slAdjusted = true;\n    }\n    const minTP = price - MIN_TP_DISTANCE;\n    if (!finalTP || finalTP >= price || (price - finalTP) < MIN_TP_DISTANCE) {\n      finalTP = minTP;\n      tpAdjusted = true;\n    }\n  }\n  \n  const slDistance = Math.abs(price - finalSL);\n  const tpDistance = Math.abs(finalTP - price);\n  const currentRR = tpDistance / slDistance;\n  \n  if (currentRR < MIN_RISK_REWARD) {\n    if (side === 'buy') {\n      finalTP = price + (slDistance * MIN_RISK_REWARD);\n    } else {\n      finalTP = price - (slDistance * MIN_RISK_REWARD);\n    }\n    tpAdjusted = true;\n    rrAdjusted = true;\n  }\n  \n  finalSL = Math.round(finalSL * 10) / 10;\n  finalTP = Math.round(finalTP * 10) / 10;\n  \n  return { stopLoss: finalSL, takeProfit: finalTP, slAdjusted, tpAdjusted, rrAdjusted };\n}\n\nreturn [{\n  json: {\n    action: syncAction,\n    details: syncDetails,\n    executionMode,\n    championName,\n    championModelId,\n    championPortfolioId: champion?.id,\n    championCurrentBalance: parseFloat(champion?.current_balance) || 10000,\n    championDecision,\n    championDecisionTime,\n    currentPrice,\n    accessToken: config.accessToken,\n    accNum: account.accNum,\n    accountId: account.id,\n    instrumentId: 9503,\n    routeId: 1084503,\n    staleExecutionIds: staleExecutions.map(e => e.id),\n    summary: {\n      virtualLongs: virtualLongs.length,\n      virtualShorts: virtualShorts.length,\n      realLongs: realLongs.length,\n      realShorts: realShorts.length,\n      staleExecutions: staleExecutions.length,\n      openExecutions: openExecutions.length,\n      orphanedPosition: !!orphanedPosition,\n      orphanedPositionSide,\n      championDecision\n    }\n  }\n}];"
+          },
+          "id": "sync_analysis",
+          "name": "Sync Analysis",
+          "type": "n8n-nodes-base.code",
+          "position": [
+            1920,
+            0
+          ],
+          "typeVersion": 2
+        },
+        {
+          "parameters": {
+            "rules": {
+              "values": [
+                {
+                  "conditions": {
+                    "options": {
+                      "version": 2,
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict"
+                    },
+                    "combinator": "or",
+                    "conditions": [
+                      {
+                        "id": "c1",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        },
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "OPEN_LONG"
+                      },
+                      {
+                        "id": "c2",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        },
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "OPEN_SHORT"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "version": 2,
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict"
+                    },
+                    "combinator": "or",
+                    "conditions": [
+                      {
+                        "id": "c3",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        },
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "CLOSE_LONG"
+                      },
+                      {
+                        "id": "c4",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        },
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "CLOSE_SHORT"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "version": 2,
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict"
+                    },
+                    "combinator": "or",
+                    "conditions": [
+                      {
+                        "id": "c5",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        },
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "NONE"
+                      },
+                      {
+                        "id": "c5b",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        },
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "SKIP_API_ERROR"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "version": 2,
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                      {
+                        "id": "c6",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        },
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "AUTO_CLOSED_BY_SLTP"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "options": {
+              "fallbackOutput": "none"
+            }
+          },
+          "id": "switch_action",
+          "name": "Switch Action",
+          "type": "n8n-nodes-base.switch",
+          "position": [
+            2240,
+            -16
+          ],
+          "typeVersion": 3.2
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://demo.tradelocker.com/backend-api/trade/accounts/{{ $json.accountId }}/orders",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{ $json.accessToken }}"
+                },
+                {
+                  "name": "accNum",
+                  "value": "={{ $json.accNum }}"
+                },
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ (() => {\n  const order = {\n    price: 0,\n    qty: $json.details.quantity,\n    routeId: $json.routeId,\n    side: $json.details.side,\n    tradableInstrumentId: $json.instrumentId,\n    type: 'market',\n    validity: 'IOC'\n  };\n  \n  // SL/TP가 있을 때만 추가\n  if ($json.details.stopLoss) {\n    order.stopLoss = $json.details.stopLoss;\n  }\n  if ($json.details.takeProfit) {\n    order.takeProfit = $json.details.takeProfit;\n  }\n  \n  return JSON.stringify(order);\n})() }}",
+            "options": {}
+          },
+          "id": "open_order",
+          "name": "Open Position Order",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            2544,
+            -176
+          ],
+          "typeVersion": 4.3,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "amount": 2
+          },
+          "id": "wait_open",
+          "name": "Wait 2s",
+          "type": "n8n-nodes-base.wait",
+          "position": [
+            2688,
+            -176
+          ],
+          "typeVersion": 1.1,
+          "webhookId": "128aaaf1-6da2-4d1b-93b7-d2c1ee26a47e"
+        },
+        {
+          "parameters": {
+            "url": "=https://demo.tradelocker.com/backend-api/trade/accounts/{{ $('Sync Analysis').first().json.accountId }}/positions",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{ $('Sync Analysis').first().json.accessToken }}"
+                },
+                {
+                  "name": "accNum",
+                  "value": "={{ $('Sync Analysis').first().json.accNum }}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "get_new_position",
+          "name": "Get New Position",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            2864,
+            -176
+          ],
+          "typeVersion": 4.3,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "jsCode": "const orderResult = $('Open Position Order').first().json;\nconst positionsData = $('Get New Position').first().json;\nconst syncData = $('Sync Analysis').first().json;\n\nconst isSuccess = orderResult.s?.toLowerCase() === 'ok';\n\nlet positionId = null;\nif (isSuccess) {\n  const positions = positionsData.d?.positions || [];\n  for (const pos of positions) {\n    const p = Array.isArray(pos) ? { id: pos[0], instrumentId: pos[1] } : pos;\n    if (String(p.tradableInstrumentId || p.instrumentId) === '9503') {\n      positionId = String(p.id);\n    }\n  }\n}\n\n// ⭐ 실제 체결가 기준으로 SL/TP 재계산\nconst actualPrice = parseFloat(orderResult.d?.averagePrice) || syncData.currentPrice || 0;\nconst originalPrice = syncData.currentPrice || actualPrice;\nconst priceDiff = actualPrice - originalPrice;\n\nconst MIN_SL_DISTANCE = 240;\nconst MIN_TP_DISTANCE = 360;\nconst MIN_RISK_REWARD = 1.5;\n\n// ⭐ 슬리피지 조정 함수 (최소 거리 유지)\nfunction adjustSLTPForSlippage(side, originalSL, originalTP, originalPrice, actualPrice) {\n  let adjustedSL = originalSL;\n  let adjustedTP = originalTP;\n  let slAdjusted = false;\n  let tpAdjusted = false;\n  \n  // 슬리피지가 $1 이상일 때만 조정\n  if (Math.abs(actualPrice - originalPrice) > 1) {\n    if (side === 'buy') {\n      // LONG: TP는 그대로 이동, SL은 최소 거리 유지\n      adjustedTP = originalTP + (actualPrice - originalPrice);\n      \n      // SL은 최소 거리를 확보하도록 조정\n      const minSL = actualPrice - MIN_SL_DISTANCE;\n      adjustedSL = Math.min(originalSL, minSL);\n      \n      tpAdjusted = true;\n      slAdjusted = (adjustedSL !== originalSL);\n    } else {\n      // SHORT: TP는 그대로 이동, SL은 최소 거리 유지\n      adjustedTP = originalTP - (actualPrice - originalPrice);\n      \n      // SL은 최소 거리를 확보하도록 조정\n      const minSL = actualPrice + MIN_SL_DISTANCE;\n      adjustedSL = Math.max(originalSL, minSL);\n      \n      tpAdjusted = true;\n      slAdjusted = (adjustedSL !== originalSL);\n    }\n  }\n  \n  // 최종 validation (R:R 비율 체크)\n  const slDistance = Math.abs(actualPrice - adjustedSL);\n  const tpDistance = Math.abs(adjustedTP - actualPrice);\n  const currentRR = tpDistance / slDistance;\n  \n  if (currentRR < MIN_RISK_REWARD) {\n    // R:R이 나쁘면 TP를 늘림\n    if (side === 'buy') {\n      adjustedTP = actualPrice + (slDistance * MIN_RISK_REWARD);\n    } else {\n      adjustedTP = actualPrice - (slDistance * MIN_RISK_REWARD);\n    }\n    tpAdjusted = true;\n  }\n  \n  // 소수점 한자리로 반올림\n  adjustedSL = Math.round(adjustedSL * 10) / 10;\n  adjustedTP = Math.round(adjustedTP * 10) / 10;\n  \n  return { adjustedSL, adjustedTP, slAdjusted, tpAdjusted };\n}\n\nlet finalSL = syncData.details.stopLoss;\nlet finalTP = syncData.details.takeProfit;\nlet slAdjustedBySlippage = false;\nlet tpAdjustedBySlippage = false;\n\nif (isSuccess && actualPrice > 0) {\n  const result = adjustSLTPForSlippage(\n    syncData.details.side,\n    syncData.details.stopLoss,\n    syncData.details.takeProfit,\n    originalPrice,\n    actualPrice\n  );\n  \n  finalSL = result.adjustedSL;\n  finalTP = result.adjustedTP;\n  slAdjustedBySlippage = result.slAdjusted;\n  tpAdjustedBySlippage = result.tpAdjusted;\n}\n\nreturn [{\n  json: {\n    symbol: 'BTCUSD',\n    action: syncData.action,\n    side: syncData.details.side,\n    quantity: syncData.details.quantity,\n    price: actualPrice,\n    tradelocker_order_id: String(orderResult.d?.orderId || ''),\n    tradelocker_position_id: positionId,\n    position_status: isSuccess ? 'OPEN' : 'FAILED',\n    status: isSuccess ? 'FILLED' : 'FAILED',\n    champion_model_id: syncData.championModelId,\n    error_message: orderResult.errmsg || null,\n    executed_at: new Date().toISOString(),\n    championName: syncData.championName,\n    currentPrice: syncData.currentPrice,\n    actualPrice: actualPrice,\n    priceDiff: Math.round(priceDiff * 100) / 100,\n    stopLoss: finalSL,\n    takeProfit: finalTP,\n    originalSL: syncData.details.originalSL,\n    originalTP: syncData.details.originalTP,\n    slAdjusted: slAdjustedBySlippage || syncData.details.slAdjusted || false,\n    tpAdjusted: tpAdjustedBySlippage || syncData.details.tpAdjusted || false,\n    rrAdjusted: syncData.details.rrAdjusted || false,\n    slAdjustedBySlippage: slAdjustedBySlippage,\n    tpAdjustedBySlippage: tpAdjustedBySlippage,\n    summary: syncData.summary\n  }\n}];"
+          },
+          "id": "prepare_open_save",
+          "name": "Prepare Open Save",
+          "type": "n8n-nodes-base.code",
+          "position": [
+            3184,
+            -176
+          ],
+          "typeVersion": 2
+        },
+        {
+          "parameters": {
+            "method": "DELETE",
+            "url": "=https://demo.tradelocker.com/backend-api/trade/positions/{{ $json.details.positionId }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{ $json.accessToken }}"
+                },
+                {
+                  "name": "accNum",
+                  "value": "={{ $json.accNum }}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "close_order",
+          "name": "Close Position Order",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            2464,
+            0
+          ],
+          "typeVersion": 4.3,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "jsCode": "const orderResult = $('Close Position Order').first().json;\nconst syncData = $('Sync Analysis').first().json;\n\n// DELETE 요청 성공 여부 확인\n// TradeLocker DELETE는 성공 시 s: 'ok' 또는 빈 응답\nconst isSuccess = orderResult.s?.toLowerCase() === 'ok' || \n                  orderResult.status === 'ok' ||\n                  !orderResult.error;\n\nreturn [{\n  json: {\n    symbol: 'BTCUSD',\n    action: syncData.action,\n    side: syncData.details.side,\n    quantity: syncData.details.quantity,\n    price: syncData.currentPrice || 0,\n    tradelocker_order_id: null,\n    tradelocker_position_id: syncData.details.positionId,\n    position_status: 'CLOSED',\n    status: isSuccess ? 'FILLED' : 'FAILED',\n    champion_model_id: syncData.championModelId,\n    error_message: orderResult.errmsg || orderResult.error || null,\n    executed_at: new Date().toISOString(),\n    championName: syncData.championName,\n    summary: syncData.summary,\n    closeExecutionId: syncData.details.executionId,\n    deleteResponse: orderResult\n  }\n}];"
+          },
+          "id": "prepare_close_save",
+          "name": "Prepare Close Save",
+          "type": "n8n-nodes-base.code",
+          "position": [
+            2688,
+            0
+          ],
+          "typeVersion": 2
+        },
+        {
+          "parameters": {
+            "jsCode": "const data = $input.first().json;\nif (!data.closeExecutionId) return [$input.first()];\n\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'PATCH',\n    url: `https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/trade_executions?id=eq.${data.closeExecutionId}`,\n    headers: {\n      'apikey': API_KEY,\n      'Authorization': `Bearer ${API_KEY}`,\n      'Content-Type': 'application/json',\n      'Prefer': 'return=minimal'\n    },\n    body: { position_status: 'CLOSED' },\n    json: true\n  });\n} catch(e) {}\n\nreturn [$input.first()];"
+          },
+          "id": "update_old_execution",
+          "name": "Update Old Execution",
+          "type": "n8n-nodes-base.code",
+          "position": [
+            2864,
+            0
+          ],
+          "typeVersion": 2
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ (() => {\n  const mode = $json.executionMode || 'full';\n  const modeLabel = mode === 'sync_only' ? '🔄 Sync Only' : '✅ Full Sync';\n  const summary = $json.summary || {};\n  const details = $json.details || {};\n  const action = $json.action || 'NONE';\n  \n  if (action === 'SKIP_API_ERROR') {\n    const msg = '⚠️ <b>Position Sync - API Error</b>\\n\\n' +\n      '🏆 Champion: <b>' + ($json.championName || 'Unknown') + '</b>\\n' +\n      '⚙️ Mode: ' + modeLabel + '\\n\\n' +\n      '🚨 <b>TradeLocker API Error</b>\\n' +\n      'Sync skipped to prevent false closures\\n\\n' +\n      '📊 <b>Virtual State (Real unknown)</b>\\n' +\n      'Virtual: ' + (summary.virtualLongs || 0) + 'L / ' + (summary.virtualShorts || 0) + 'S\\n' +\n      'Open Executions: ' + (summary.openExecutions || 0) + '\\n\\n' +\n      '💡 Will retry on next sync cycle\\n' +\n      '⏰ ' + new Date().toISOString().substring(11,19) + ' UTC';\n    return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n  }\n  \n  const msg = '✅ <b>Position Sync - No Action</b>\\n\\n' +\n    '🏆 Champion: <b>' + ($json.championName || 'Unknown') + '</b>\\n' +\n    '⚙️ Mode: ' + modeLabel + '\\n\\n' +\n    '📊 <b>Current State</b>\\n' +\n    'Virtual: ' + (summary.virtualLongs || 0) + 'L / ' + (summary.virtualShorts || 0) + 'S\\n' +\n    'Real: ' + (summary.realLongs || 0) + 'L / ' + (summary.realShorts || 0) + 'S\\n\\n' +\n    '✨ ' + (details.reason || 'Positions are in sync') + '\\n' +\n    '⏰ ' + new Date().toISOString().substring(11,19) + ' UTC';\n  \n  return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n})() }}",
+            "options": {}
+          },
+          "id": "telegram_no_action",
+          "name": "Telegram No Action",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            2464,
+            176
+          ],
+          "typeVersion": 4.3,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {},
+          "id": "merge_results",
+          "name": "Merge Results",
+          "type": "n8n-nodes-base.merge",
+          "position": [
+            3696,
+            -96
+          ],
+          "typeVersion": 3.2
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/trade_executions",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                },
+                {
+                  "name": "Authorization",
+                  "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                },
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "name": "Prefer",
+                  "value": "return=representation"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ (() => { if (!$json.symbol) return '{}'; return JSON.stringify({ symbol: $json.symbol, action: $json.action, side: $json.side, quantity: $json.quantity, price: $json.price, tradelocker_order_id: $json.tradelocker_order_id, tradelocker_position_id: $json.tradelocker_position_id, position_status: $json.position_status, status: $json.status, champion_model_id: $json.champion_model_id, error_message: $json.error_message, executed_at: $json.executed_at }); })() }}",
+            "options": {}
+          },
+          "id": "save_execution",
+          "name": "Save Execution",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            4128,
+            -96
+          ],
+          "typeVersion": 4.3,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ (() => {\n  const d = $json;\n  \n  // Check Valid Data 노드에서 원본 데이터 가져오기\n  let originalData = d;\n  try {\n    originalData = $('Check Valid Data').first().json;\n  } catch(e) {}\n  \n  let slValue = originalData.stopLoss || d.stopLoss;\n  let tpValue = originalData.takeProfit || d.takeProfit;\n  let championName = originalData.championName || d.championName;\n  const summary = originalData.summary || d.summary || {};\n  \n  const actionIcon = d.action === 'OPEN_LONG' ? '🟢' : \n                     d.action === 'OPEN_SHORT' ? '🔴' : \n                     d.action === 'CLOSE_LONG' ? '🟢' : \n                     d.action === 'CLOSE_SHORT' ? '🔴' : '⚪';\n  \n  const statusIcon = d.status === 'FILLED' ? '✅' : '❌';\n  \n  let msg = statusIcon + ' <b>Position Sync Executed</b>\\n\\n';\n  msg += '🏆 Champion: <b>' + (championName || 'Unknown') + '</b>\\n';\n  msg += actionIcon + ' Action: <b>' + d.action + '</b>\\n\\n';\n  \n  msg += '📊 <b>Order Details</b>\\n';\n  msg += '• Symbol: BTCUSD\\n';\n  msg += '• Side: ' + d.side + '\\n';\n  msg += '• Size: ' + d.quantity + ' lot\\n';\n  msg += '• Price: $' + Math.round(originalData.actualPrice || d.price) + '\\n';\n  msg += '• Status: ' + d.status + '\\n';\n  \n  if (d.action && d.action.includes('OPEN') && slValue && tpValue) {\n    msg += '\\n🎯 <b>SL/TP</b>\\n';\n    msg += '• SL: $' + Math.round(slValue) + '\\n';\n    msg += '• TP: $' + Math.round(tpValue) + '\\n';\n    \n    const adjustments = [];\n    if (originalData.slAdjusted) adjustments.push('SL adjusted');\n    if (originalData.tpAdjusted) adjustments.push('TP adjusted');\n    if (originalData.rrAdjusted) adjustments.push('R:R enforced (min 1:1.5)');\n    \n    if (adjustments.length > 0) {\n      msg += '\\n⚙️ <b>Adjustments:</b>\\n';\n      adjustments.forEach(adj => { msg += '• ' + adj + '\\n'; });\n    }\n  }\n  \n  // Sync State (After) - 진입 후에는 +1 표시\n  let vLongs = summary.virtualLongs || 0;\n  let vShorts = summary.virtualShorts || 0;\n  let rLongs = summary.realLongs || 0;\n  let rShorts = summary.realShorts || 0;\n  \n  // OPEN 액션 후에는 Real에 +1\n  if (d.action === 'OPEN_LONG' && d.status === 'FILLED') rLongs += 1;\n  if (d.action === 'OPEN_SHORT' && d.status === 'FILLED') rShorts += 1;\n  // CLOSE 액션 후에는 Real에 -1 (이미 0이면 그대로)\n  if (d.action === 'CLOSE_LONG' && d.status === 'FILLED') rLongs = Math.max(0, rLongs - 1);\n  if (d.action === 'CLOSE_SHORT' && d.status === 'FILLED') rShorts = Math.max(0, rShorts - 1);\n  \n  msg += '\\n📈 <b>Sync State (After)</b>\\n';\n  msg += 'Virtual: ' + vLongs + 'L / ' + vShorts + 'S\\n';\n  msg += 'Real: ' + rLongs + 'L / ' + rShorts + 'S\\n';\n  \n  msg += '\\n⏰ ' + new Date().toISOString().substring(11,19) + ' UTC';\n  \n  return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n})() }}",
+            "options": {}
+          },
+          "id": "telegram_executed",
+          "name": "Telegram Executed",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            4320,
+            -80
+          ],
+          "typeVersion": 4.3,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={\n  \"chat_id\": \"-1003644771027\",\n  \"parse_mode\": \"HTML\",\n  \"text\": \"⚠️ <b>Trading Disabled</b>\\n\\nReason: {{ $json.reason }}\\n⏰ {{ new Date().toISOString().substring(11,19) }} UTC\"\n}",
+            "options": {}
+          },
+          "id": "telegram_disabled",
+          "name": "Telegram Disabled",
+          "type": "n8n-nodes-base.httpRequest",
+          "position": [
+            896,
+            208
+          ],
+          "typeVersion": 4.3,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "url": "https://fapi.binance.com/fapi/v1/ticker/price",
+            "sendQuery": true,
+            "queryParameters": {
+              "parameters": [
+                {
+                  "name": "symbol",
+                  "value": "BTCUSDT"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "get_current_price",
+          "name": "Get Current Price",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            1216,
+            0
+          ],
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "method": "PATCH",
+            "url": "=https://demo.tradelocker.com/backend-api/trade/positions/{{ $('Prepare Open Save').first().json.tradelocker_position_id }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{ $('Sync Analysis').first().json.accessToken }}"
+                },
+                {
+                  "name": "accNum",
+                  "value": "={{ $('Sync Analysis').first().json.accNum }}"
+                },
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ JSON.stringify({\n  stopLoss: $('Prepare Open Save').first().json.stopLoss,\n  takeProfit: $('Prepare Open Save').first().json.takeProfit\n}) }}",
+            "options": {}
+          },
+          "id": "set_sltp",
+          "name": "Set SL/TP",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            3024,
+            -176
+          ],
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "jsCode": "const data = $input.first().json;\nconst staleIds = data.staleExecutionIds || [];\n\nif (staleIds.length === 0) {\n  return [$input.first()];\n}\n\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\n\nlet cleanedCount = 0;\n\nfor (const execId of staleIds) {\n  try {\n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/trade_executions?id=eq.${execId}`,\n      headers: {\n        'apikey': API_KEY,\n        'Authorization': `Bearer ${API_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: { position_status: 'CLOSED', error_message: 'Auto-closed: Position not found in TradeLocker' },\n      json: true\n    });\n    cleanedCount++;\n  } catch(e) {}\n}\n\nreturn [{ json: { ...data, cleanedStaleExecutions: cleanedCount } }];"
+          },
+          "id": "cleanup_stale",
+          "name": "Cleanup Stale Executions",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2064,
+            0
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "// symbol이 없으면 스킵\nconst data = $input.first()?.json;\nif (!data || !data.symbol) {\n  return [];\n}\nreturn [$input.first()];"
+          },
+          "id": "check_valid_data",
+          "name": "Check Valid Data",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            3888,
+            -96
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "// Set SL/TP 후 Prepare Open Save 데이터 복원\nconst openData = $('Prepare Open Save').first().json;\nconst sltpResult = $input.first().json;\n\nreturn [{\n  json: {\n    ...openData,\n    sltpSet: sltpResult.s === 'ok'\n  }\n}];"
+          },
+          "id": "restore_open_data",
+          "name": "Restore Open Data",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            3360,
+            -176
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "// ============================================\n// TP/SL 자동 청산 처리 (TradeLocker History 기반)\n// v2.6 - CLOSE 기록 INSERT 추가\n// ============================================\n\nconst data = $input.first().json;\nconst positions = data.details?.positions || [];\n\nif (positions.length === 0) {\n  return [{ json: { ...data, processed: false, reason: 'No positions to process' } }];\n}\n\nconst API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\nconst BASE_URL = 'https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1';\n\nconst results = [];\nlet actualPnlToApply = 0;\nlet actualTradeCount = 0;\nlet actualWinCount = 0;\n\nfor (const pos of positions) {\n  let updated = false;\n  let error = null;\n  let virtualPositionUpdated = false;\n  let alreadyClosed = false;\n  let closeRecordInserted = false;\n  \n  try {\n    // 1. virtual_positions 상태 확인\n    if (pos.virtualPositionId) {\n      const vpRes = await this.helpers.httpRequest({\n        method: 'GET',\n        url: `${BASE_URL}/virtual_positions?id=eq.${pos.virtualPositionId}`,\n        headers: {\n          'apikey': API_KEY,\n          'Authorization': `Bearer ${API_KEY}`\n        },\n        json: true\n      });\n      \n      const vp = vpRes[0];\n      \n      if (vp && vp.status === 'CLOSED') {\n        alreadyClosed = true;\n      } else if (vp && vp.status === 'OPEN') {\n        await this.helpers.httpRequest({\n          method: 'PATCH',\n          url: `${BASE_URL}/virtual_positions?id=eq.${pos.virtualPositionId}`,\n          headers: {\n            'apikey': API_KEY,\n            'Authorization': `Bearer ${API_KEY}`,\n            'Content-Type': 'application/json',\n            'Prefer': 'return=minimal'\n          },\n          body: {\n            status: 'CLOSED',\n            closed_at: new Date().toISOString(),\n            close_price: pos.closedPrice,\n            realized_pnl: pos.netPnl\n          },\n          json: true\n        });\n        virtualPositionUpdated = true;\n        \n        actualPnlToApply += (parseFloat(pos.netPnl) || 0);\n        actualTradeCount += 1;\n        if ((parseFloat(pos.netPnl) || 0) > 0) actualWinCount += 1;\n      }\n    }\n    \n    // 2. trade_executions - 기존 OPEN 기록 PATCH\n    if (pos.executionId) {\n      await this.helpers.httpRequest({\n        method: 'PATCH',\n        url: `${BASE_URL}/trade_executions?id=eq.${pos.executionId}`,\n        headers: {\n          'apikey': API_KEY,\n          'Authorization': `Bearer ${API_KEY}`,\n          'Content-Type': 'application/json',\n          'Prefer': 'return=minimal'\n        },\n        body: {\n          position_status: 'CLOSED'\n        },\n        json: true\n      });\n    }\n    \n    // 3. NEW: trade_executions - CLOSE 기록 INSERT\n    if (!alreadyClosed) {\n      const closeAction = pos.side === 'LONG' ? 'CLOSE_LONG' : 'CLOSE_SHORT';\n      const closeSide = pos.side === 'LONG' ? 'buy' : 'sell';\n      \n      await this.helpers.httpRequest({\n        method: 'POST',\n        url: `${BASE_URL}/trade_executions`,\n        headers: {\n          'apikey': API_KEY,\n          'Authorization': `Bearer ${API_KEY}`,\n          'Content-Type': 'application/json',\n          'Prefer': 'return=minimal'\n        },\n        body: {\n          symbol: 'BTCUSD',\n          action: closeAction,\n          side: closeSide,\n          quantity: pos.quantity,\n          price: pos.closedPrice,\n          tradelocker_position_id: pos.positionId,\n          position_status: 'CLOSED',\n          status: 'FILLED',\n          champion_model_id: data.championModelId,\n          error_message: `Auto-closed by ${pos.closedBy} at $${pos.closedPrice}`,\n          executed_at: new Date().toISOString()\n        },\n        json: true\n      });\n      closeRecordInserted = true;\n    }\n    \n    updated = true;\n  } catch(e) {\n    error = e.message;\n  }\n  \n  results.push({ ...pos, updated, error, virtualPositionUpdated, alreadyClosed, closeRecordInserted });\n}\n\n// 4. virtual_portfolios 잔고 업데이트\nconst portfolioId = data.championPortfolioId;\nlet portfolioUpdated = false;\nlet balanceAlreadyUpdated = false;\nlet newBalance = parseFloat(data.championCurrentBalance);\n\nif (portfolioId && actualPnlToApply !== 0 && actualTradeCount > 0) {\n  try {\n    const portfolioRes = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${BASE_URL}/virtual_portfolios?id=eq.${portfolioId}`,\n      headers: {\n        'apikey': API_KEY,\n        'Authorization': `Bearer ${API_KEY}`\n      },\n      json: true\n    });\n    \n    const portfolio = portfolioRes[0];\n    const currentBalance = parseFloat(portfolio?.current_balance) || 10000;\n    const currentTrades = parseInt(portfolio?.total_trades) || 0;\n    const currentWins = parseInt(portfolio?.winning_trades) || 0;\n    const currentRealizedPnl = parseFloat(portfolio?.realized_pnl) || 0;\n    \n    newBalance = currentBalance + actualPnlToApply;\n    \n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `${BASE_URL}/virtual_portfolios?id=eq.${portfolioId}`,\n      headers: {\n        'apikey': API_KEY,\n        'Authorization': `Bearer ${API_KEY}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: {\n        current_balance: Math.round(newBalance * 100) / 100,\n        realized_pnl: Math.round((currentRealizedPnl + actualPnlToApply) * 100) / 100,\n        total_trades: currentTrades + actualTradeCount,\n        winning_trades: currentWins + actualWinCount,\n        updated_at: new Date().toISOString()\n      },\n      json: true\n    });\n    \n    portfolioUpdated = true;\n  } catch(e) {}\n} else {\n  balanceAlreadyUpdated = true;\n}\n\nconst totalPnl = positions.reduce((sum, p) => sum + (parseFloat(p.netPnl) || 0), 0);\nconst alreadyClosedCount = results.filter(r => r.alreadyClosed).length;\nconst closeRecordsInserted = results.filter(r => r.closeRecordInserted).length;\n\nreturn [{\n  json: {\n    action: 'AUTO_CLOSED_BY_SLTP',\n    championName: data.championName,\n    championModelId: data.championModelId,\n    processedPositions: results,\n    totalPnl: Math.round(totalPnl * 100) / 100,\n    actualPnlApplied: Math.round(actualPnlToApply * 100) / 100,\n    previousBalance: parseFloat(data.championCurrentBalance),\n    newBalance: Math.round(newBalance * 100) / 100,\n    positionsCount: positions.length,\n    alreadyClosedCount: alreadyClosedCount,\n    actuallyProcessedCount: actualTradeCount,\n    closeRecordsInserted: closeRecordsInserted,\n    winsCount: actualWinCount,\n    portfolioUpdated,\n    balanceAlreadyUpdated,\n    summary: data.summary\n  }\n}];"
+          },
+          "id": "process_auto_closed",
+          "name": "Process Auto Closed",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2464,
+            352
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ (() => {\n  const d = $json;\n  const positions = d.processedPositions || [];\n  \n  let posDetails = '';\n  for (const p of positions) {\n    let icon = '🤖';\n    if (p.closedBy === 'TP') icon = '🎯';\n    else if (p.closedBy === 'SL') icon = '🛑';\n    \n    const pnlIcon = (p.netPnl || 0) >= 0 ? '💰' : '💸';\n    const entry = p.entryPrice ? Math.round(p.entryPrice) : 0;\n    const closed = p.closedPrice ? Math.round(p.closedPrice) : 0;\n    const pnl = p.netPnl ? p.netPnl.toFixed(2) : '0.00';\n    posDetails += icon + ' ' + p.side + ' @ $' + entry + ' -> $' + closed + '\\n';\n    posDetails += '   ' + pnlIcon + ' P&L: $' + pnl + ' (' + p.closedBy + ')\\n';\n  }\n  \n  const totalIcon = (d.totalPnl || 0) >= 0 ? '✅' : '❌';\n  const totalPnl = d.totalPnl ? d.totalPnl.toFixed(2) : '0.00';\n  const prevBal = d.previousBalance ? d.previousBalance.toFixed(2) : '0.00';\n  const newBal = d.newBalance ? d.newBalance.toFixed(2) : '0.00';\n  \n  let balanceNote = '';\n  if (d.balanceAlreadyUpdated) {\n    balanceNote = '\\n⚠️ Balance already updated';\n  }\n  \n  const hasAIDecision = positions.some(p => p.closedBy === 'AI_DECISION');\n  const hasSLTP = positions.some(p => p.closedBy === 'SL' || p.closedBy === 'TP');\n  let title = '🔄 <b>Auto-Closed';\n  if (hasAIDecision && !hasSLTP) title += ' by AI Decision';\n  else if (hasSLTP && !hasAIDecision) title += ' by SL/TP';\n  else title += '</b>';\n  title += '</b>';\n  \n  const msg = title + '\\n\\n' +\n    '🏆 Champion: <b>' + (d.championName || 'Unknown') + '</b>\\n\\n' +\n    '📊 <b>Closed Positions (' + (d.positionsCount || 0) + ')</b>\\n' +\n    posDetails + '\\n' +\n    totalIcon + ' <b>Total P&L: $' + totalPnl + '</b>\\n\\n' +\n    '💼 Balance: $' + prevBal + ' -> $' + newBal + balanceNote + '\\n\\n' +\n    '⏰ ' + new Date().toISOString().substring(11,19) + ' UTC';\n  \n  return JSON.stringify({chat_id: '-1003644771027', parse_mode: 'HTML', text: msg});\n})() }}",
+            "options": {}
+          },
+          "id": "telegram_auto_closed",
+          "name": "Telegram Auto Closed",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            2688,
+            352
+          ],
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "jsCode": "// ============================================\n// TradeLocker Lot Step Validator & Rounder\n// BTCUSD Lot Step = 0.01 BTC\n// ============================================\n\nconst LOT_STEP = 0.01;\nconst MIN_QUANTITY = 0.01;\nconst MAX_QUANTITY = 1.0;\n\nfor (const item of $input.all()) {\n  const originalQuantity = parseFloat(item.json.quantity || 0);\n  \n  if (originalQuantity <= 0) {\n    item.json.quantity = MIN_QUANTITY;\n    item.json.quantity_adjusted = true;\n    item.json.quantity_original = originalQuantity;\n    continue;\n  }\n  \n  // Round to nearest lot step\n  const rounded = Math.round(originalQuantity / LOT_STEP) * LOT_STEP;\n  \n  // Apply min/max constraints\n  let finalQuantity = Math.max(MIN_QUANTITY, Math.min(MAX_QUANTITY, rounded));\n  \n  // Fix floating point precision issues\n  finalQuantity = parseFloat(finalQuantity.toFixed(2));\n  \n  // Mark if adjusted\n  if (Math.abs(finalQuantity - originalQuantity) > 0.001) {\n    item.json.quantity_adjusted = true;\n    item.json.quantity_original = originalQuantity;\n  } else {\n    item.json.quantity_adjusted = false;\n  }\n  \n  item.json.quantity = finalQuantity;\n}\n\nreturn $input.all();"
+          },
+          "id": "8ea75498-9a97-4124-a090-94400edff815",
+          "name": "Round Quantity to Lot Step",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 1,
+          "position": [
+            2352,
+            -176
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "// Schedule 트리거에서 실행 시 sync_only 모드 설정\n// 청산 동기화만 수행, 새 포지션 오픈 안함\nreturn [{ json: { mode: 'sync_only' } }];"
+          },
+          "id": "set_sync_mode",
+          "name": "Set Sync Only Mode",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            112,
+            0
+          ]
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minutes"
+                }
+              ]
+            }
+          },
+          "id": "trigger",
+          "name": "Every5 Minutes",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "position": [
+            0,
+            0
+          ],
+          "typeVersion": 1.3
+        },
+        {
+          "parameters": {
+            "url": "=https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/ai_decisions?model_id=eq.{{ $('Get Champion Portfolio').first().json.model_id }}&order=created_at.desc&limit=1",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                },
+                {
+                  "name": "Authorization",
+                  "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "get_champion_decision",
+          "name": "Get Champion Recent Decision",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            1568,
+            112
+          ]
+        }
+      ],
+      "connections": {
+        "Called from AI Engine": {
+          "main": [
+            [
+              {
+                "node": "Get System Config",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get System Config": {
+          "main": [
+            [
+              {
+                "node": "Check Config",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Check Config": {
+          "main": [
+            [
+              {
+                "node": "Trading Enabled?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Trading Enabled?": {
+          "main": [
+            [
+              {
+                "node": "Get TL Account",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Telegram Disabled",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get TL Account": {
+          "main": [
+            [
+              {
+                "node": "Get TL Positions",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get TL Positions": {
+          "main": [
+            [
+              {
+                "node": "Get Current Price",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get Current Price": {
+          "main": [
+            [
+              {
+                "node": "Get Champion Portfolio",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get Champion Portfolio": {
+          "main": [
+            [
+              {
+                "node": "Get Champion Virtual Positions",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get Champion Virtual Positions": {
+          "main": [
+            [
+              {
+                "node": "Get Champion Recent Decision",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get AI Open Executions": {
+          "main": [
+            [
+              {
+                "node": "Sync Analysis",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Sync Analysis": {
+          "main": [
+            [
+              {
+                "node": "Cleanup Stale Executions",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Cleanup Stale Executions": {
+          "main": [
+            [
+              {
+                "node": "Switch Action",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Switch Action": {
+          "main": [
+            [
+              {
+                "node": "Round Quantity to Lot Step",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Close Position Order",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Telegram No Action",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Process Auto Closed",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Open Position Order": {
+          "main": [
+            [
+              {
+                "node": "Wait 2s",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Wait 2s": {
+          "main": [
+            [
+              {
+                "node": "Get New Position",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get New Position": {
+          "main": [
+            [
+              {
+                "node": "Prepare Open Save",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Open Save": {
+          "main": [
+            [
+              {
+                "node": "Set SL/TP",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Set SL/TP": {
+          "main": [
+            [
+              {
+                "node": "Restore Open Data",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Restore Open Data": {
+          "main": [
+            [
+              {
+                "node": "Merge Results",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Close Position Order": {
+          "main": [
+            [
+              {
+                "node": "Prepare Close Save",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Close Save": {
+          "main": [
+            [
+              {
+                "node": "Update Old Execution",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Update Old Execution": {
+          "main": [
+            [
+              {
+                "node": "Merge Results",
+                "type": "main",
+                "index": 1
+              }
+            ]
+          ]
+        },
+        "Merge Results": {
+          "main": [
+            [
+              {
+                "node": "Check Valid Data",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Check Valid Data": {
+          "main": [
+            [
+              {
+                "node": "Save Execution",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Save Execution": {
+          "main": [
+            [
+              {
+                "node": "Telegram Executed",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Process Auto Closed": {
+          "main": [
+            [
+              {
+                "node": "Telegram Auto Closed",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Round Quantity to Lot Step": {
+          "main": [
+            [
+              {
+                "node": "Open Position Order",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Set Sync Only Mode": {
+          "main": [
+            [
+              {
+                "node": "Get System Config",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Every5 Minutes": {
+          "main": [
+            [
+              {
+                "node": "Set Sync Only Mode",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get Champion Recent Decision": {
+          "main": [
+            [
+              {
+                "node": "Get AI Open Executions",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "Geunsoo Park",
+      "name": null,
+      "description": null
+    }
+  }
+}

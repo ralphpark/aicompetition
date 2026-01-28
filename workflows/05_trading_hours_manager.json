@@ -1,0 +1,62 @@
+{
+  "id": "PBNBPJ7Q2n88JgoE",
+  "name": "5. Trading Hours Manager",
+  "active": false,
+  "nodes": [
+    {
+      "id": "pause_trigger",
+      "name": "Pause Time (06:00 KST)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 0],
+      "parameters": {"rule": {"interval": [{"field": "cronExpression", "expression": "0 6 * * *"}]}},
+      "typeVersion": 1.2
+    },
+    {
+      "id": "resume_trigger",
+      "name": "Resume Time (07:30 KST)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 200],
+      "parameters": {"rule": {"interval": [{"field": "cronExpression", "expression": "30 7 * * *"}]}},
+      "typeVersion": 1.2
+    },
+    {
+      "id": "pause_workflows",
+      "name": "Pause Trading Workflows",
+      "type": "n8n-nodes-base.code",
+      "position": [220, 0],
+      "parameters": {"jsCode": "const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\ntry {\n  await this.helpers.httpRequest({method: 'PATCH', url: 'https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/system_config?key=eq.is_trading_enabled', headers: {'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal'}, body: { value: 'false' }, json: true});\n  return [{ json: { action: 'PAUSE', status: 'success', time: new Date().toISOString() } }];\n} catch (e) { return [{ json: { action: 'PAUSE', status: 'error', message: e.message } }]; }"},
+      "typeVersion": 2
+    },
+    {
+      "id": "resume_workflows",
+      "name": "Resume Trading Workflows",
+      "type": "n8n-nodes-base.code",
+      "position": [220, 200],
+      "parameters": {"jsCode": "const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZGF2ZnZma2tsbXVkYnBmZGhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTc5MjgsImV4cCI6MjA4MzQ3MzkyOH0.TbFIFNUnYACyAT8c_vl3agifPPx8ut0OcCoz6JJ2aBY';\ntry {\n  await this.helpers.httpRequest({method: 'PATCH', url: 'https://tndavfvfkklmudbpfdhj.supabase.co/rest/v1/system_config?key=eq.is_trading_enabled', headers: {'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal'}, body: { value: 'true' }, json: true});\n  return [{ json: { action: 'RESUME', status: 'success', time: new Date().toISOString() } }];\n} catch (e) { return [{ json: { action: 'RESUME', status: 'error', message: e.message } }]; }"},
+      "typeVersion": 2
+    },
+    {
+      "id": "telegram_pause",
+      "name": "Telegram Pause Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [440, 0],
+      "parameters": {"method": "POST", "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage", "sendHeaders": true, "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]}, "sendBody": true, "specifyBody": "json", "jsonBody": "={\"chat_id\": \"-1003644771027\", \"parse_mode\": \"HTML\", \"text\": \"⏸️ <b>Trading Paused</b>\\n\\n🕕 06:00~07:30 KST\"}"},
+      "typeVersion": 4.3
+    },
+    {
+      "id": "telegram_resume",
+      "name": "Telegram Resume Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [440, 200],
+      "parameters": {"method": "POST", "url": "https://api.telegram.org/bot8249038992:AAEvy2a-S3orTzei3Ok7P1KTgrMfT2InN1w/sendMessage", "sendHeaders": true, "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]}, "sendBody": true, "specifyBody": "json", "jsonBody": "={\"chat_id\": \"-1003644771027\", \"parse_mode\": \"HTML\", \"text\": \"▶️ <b>Trading Resumed</b>\"}"},
+      "typeVersion": 4.3
+    }
+  ],
+  "connections": {
+    "Pause Time (06:00 KST)": {"main": [[{"node": "Pause Trading Workflows", "type": "main", "index": 0}]]},
+    "Resume Time (07:30 KST)": {"main": [[{"node": "Resume Trading Workflows", "type": "main", "index": 0}]]},
+    "Pause Trading Workflows": {"main": [[{"node": "Telegram Pause Alert", "type": "main", "index": 0}]]},
+    "Resume Trading Workflows": {"main": [[{"node": "Telegram Resume Alert", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "errorWorkflow": "s90lTAdKG3PBwk39"}
+}

@@ -1,0 +1,107 @@
+{
+  "id": "3WFyNJcSs1iDE0Rz",
+  "name": "0. TradeLocker Token Manager",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "55 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "trigger",
+      "name": "Every Hour at :55",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 0],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://demo.tradelocker.com/backend-api/auth/jwt/token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "content-type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"email\": \"simgokr@gmail.com\",\n  \"password\": \"+7GxtY$@\",\n  \"server\": \"E8\"\n}",
+        "options": {}
+      },
+      "id": "auth",
+      "name": "토큰발행 http",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [224, 0],
+      "typeVersion": 4.3,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "system_config",
+        "filters": {
+          "conditions": [
+            {"keyName": "key", "condition": "eq", "keyValue": "tradelocker_access_token"}
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {"fieldId": "value", "fieldValue": "={{ $json.accessToken }}"},
+            {"fieldId": "updated_at", "fieldValue": "={{ $now.toISO() }}"}
+          ]
+        }
+      },
+      "id": "save_token",
+      "name": "Save Access Token",
+      "type": "n8n-nodes-base.supabase",
+      "position": [448, 0],
+      "typeVersion": 1,
+      "credentials": {
+        "supabaseApi": {"id": "1WUP90pAaSuxQoxn", "name": "Supabase account 2"}
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "system_config",
+        "filters": {
+          "conditions": [
+            {"keyName": "key", "condition": "eq", "keyValue": "tradelocker_refresh_token"}
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {"fieldId": "value", "fieldValue": "={{ $('토큰발행 http').item.json.refreshToken }}"},
+            {"fieldId": "updated_at", "fieldValue": "={{ $now.toISO() }}"}
+          ]
+        }
+      },
+      "id": "save_refresh",
+      "name": "Save Refresh Token",
+      "type": "n8n-nodes-base.supabase",
+      "position": [672, 0],
+      "typeVersion": 1,
+      "credentials": {
+        "supabaseApi": {"id": "1WUP90pAaSuxQoxn", "name": "Supabase account 2"}
+      }
+    }
+  ],
+  "connections": {
+    "Every Hour at :55": {"main": [[{"node": "토큰발행 http", "type": "main", "index": 0}]]},
+    "토큰발행 http": {"main": [[{"node": "Save Access Token", "type": "main", "index": 0}]]},
+    "Save Access Token": {"main": [[{"node": "Save Refresh Token", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "errorWorkflow": "s90lTAdKG3PBwk39"
+  }
+}
