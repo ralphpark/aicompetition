@@ -1,0 +1,17 @@
+# OS files
+.DS_Store
+*.swp
+*.swo
+
+# IDE
+.idea/
+.vscode/
+
+# Node modules
+node_modules/
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
