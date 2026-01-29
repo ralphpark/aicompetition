@@ -1,7 +1,7 @@
 {
   "success": true,
   "data": {
-    "updatedAt": "2026-01-29T00:26:54.663Z",
+    "updatedAt": "2026-01-29T01:24:24.163Z",
     "createdAt": "2026-01-09T01:05:39.480Z",
     "id": "XtBTh8nVgKcFEizV",
     "name": "2. AI Decision Engine (8 Models Competition)",
@@ -796,19 +796,8 @@
         "parameters": {
           "method": "POST",
           "url": "https://openrouter.ai/api/v1/chat/completions",
-          "sendHeaders": true,
-          "headerParameters": {
-            "parameters": [
-              {
-                "name": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "name": "Authorization",
-                "value": "Bearer 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"
-              }
-            ]
-          },
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "openRouterApi",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({\n  model: 'xiaomi/mimo-v2-flash',\n  temperature: 0.7,\n  max_tokens: 5000,\n  messages: [\n    { \n      role: 'user', \n      content: $json.systemPrompt + '\\n\\n---\\n\\n' + $json.userPrompt \n    }\n  ]\n}) }}",
@@ -822,6 +811,12 @@
           512
         ],
         "typeVersion": 4.3,
+        "credentials": {
+          "openRouterApi": {
+            "id": "VpT8OIgNHCYO34hT",
+            "name": "OpenRouter account"
+          }
+        },
         "onError": "continueErrorOutput"
       },
       {
@@ -1130,19 +1125,8 @@
         "parameters": {
           "method": "POST",
           "url": "https://openrouter.ai/api/v1/chat/completions",
-          "sendHeaders": true,
-          "headerParameters": {
-            "parameters": [
-              {
-                "name": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "name": "Authorization",
-                "value": "Bearer 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"
-              }
-            ]
-          },
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "openRouterApi",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({\n  model: 'x-ai/grok-4.1-fast',\n  temperature: 0.7,\n  max_tokens: 5000,\n  messages: [\n    { \n      role: 'user', \n      content: $json.systemPrompt + '\\n\\n---\\n\\n' + $json.userPrompt \n    }\n  ]\n}) }}",
@@ -1158,6 +1142,12 @@
         "typeVersion": 4.3,
         "retryOnFail": false,
         "waitBetweenTries": 5000,
+        "credentials": {
+          "openRouterApi": {
+            "id": "VpT8OIgNHCYO34hT",
+            "name": "OpenRouter account"
+          }
+        },
         "onError": "continueErrorOutput"
       },
       {
@@ -1819,9 +1809,9 @@
       "templateCredsSetupCompleted": true
     },
     "pinData": {},
-    "versionId": "d4f625bc-bee7-4560-b0b6-e7726cbdc8ee",
-    "activeVersionId": "d4f625bc-bee7-4560-b0b6-e7726cbdc8ee",
-    "versionCounter": 919,
+    "versionId": "42ce83a1-1c15-4169-9e62-48d25df42680",
+    "activeVersionId": "42ce83a1-1c15-4169-9e62-48d25df42680",
+    "versionCounter": 925,
     "triggerCount": 1,
     "shared": [
       {
@@ -1881,9 +1871,9 @@
     ],
     "tags": [],
     "activeVersion": {
-      "updatedAt": "2026-01-29T00:26:54.670Z",
-      "createdAt": "2026-01-29T00:26:54.670Z",
-      "versionId": "d4f625bc-bee7-4560-b0b6-e7726cbdc8ee",
+      "updatedAt": "2026-01-29T01:24:24.170Z",
+      "createdAt": "2026-01-29T01:24:24.170Z",
+      "versionId": "42ce83a1-1c15-4169-9e62-48d25df42680",
       "workflowId": "XtBTh8nVgKcFEizV",
       "nodes": [
         {
@@ -2673,19 +2663,8 @@
           "parameters": {
             "method": "POST",
             "url": "https://openrouter.ai/api/v1/chat/completions",
-            "sendHeaders": true,
-            "headerParameters": {
-              "parameters": [
-                {
-                  "name": "Content-Type",
-                  "value": "application/json"
-                },
-                {
-                  "name": "Authorization",
-                  "value": "Bearer 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"
-                }
-              ]
-            },
+            "authentication": "predefinedCredentialType",
+            "nodeCredentialType": "openRouterApi",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({\n  model: 'xiaomi/mimo-v2-flash',\n  temperature: 0.7,\n  max_tokens: 5000,\n  messages: [\n    { \n      role: 'user', \n      content: $json.systemPrompt + '\\n\\n---\\n\\n' + $json.userPrompt \n    }\n  ]\n}) }}",
@@ -2699,6 +2678,12 @@
             512
           ],
           "typeVersion": 4.3,
+          "credentials": {
+            "openRouterApi": {
+              "id": "VpT8OIgNHCYO34hT",
+              "name": "OpenRouter account"
+            }
+          },
           "onError": "continueErrorOutput"
         },
         {
@@ -3007,19 +2992,8 @@
           "parameters": {
             "method": "POST",
             "url": "https://openrouter.ai/api/v1/chat/completions",
-            "sendHeaders": true,
-            "headerParameters": {
-              "parameters": [
-                {
-                  "name": "Content-Type",
-                  "value": "application/json"
-                },
-                {
-                  "name": "Authorization",
-                  "value": "Bearer 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"
-                }
-              ]
-            },
+            "authentication": "predefinedCredentialType",
+            "nodeCredentialType": "openRouterApi",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({\n  model: 'x-ai/grok-4.1-fast',\n  temperature: 0.7,\n  max_tokens: 5000,\n  messages: [\n    { \n      role: 'user', \n      content: $json.systemPrompt + '\\n\\n---\\n\\n' + $json.userPrompt \n    }\n  ]\n}) }}",
@@ -3035,6 +3009,12 @@
           "typeVersion": 4.3,
           "retryOnFail": false,
           "waitBetweenTries": 5000,
+          "credentials": {
+            "openRouterApi": {
+              "id": "VpT8OIgNHCYO34hT",
+              "name": "OpenRouter account"
+            }
+          },
           "onError": "continueErrorOutput"
         },
         {
