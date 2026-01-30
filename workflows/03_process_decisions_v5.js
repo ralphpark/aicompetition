@@ -216,16 +216,17 @@ if (currentPrice > 0) {
           continue;
         }
 
-        // ========== v5.0: Multi-Timeframe Confluence Check ==========
-        if (!entryAllowed) {
-          skippedList.push({
-            model_name: mname2,
-            action: action,
-            reason: 'Confluence fail (level=' + confluenceLevel + ', dir=' + confluenceDirection + ')'
-          });
-          continue;
-        }
-        // ========== END v5.0 Confluence ==========
+        // ========== v5.1: Confluence Check DISABLED for AI Autonomy ==========
+        // AI models receive confluence data in prompts but make autonomous decisions
+        // if (!entryAllowed) {
+        //   skippedList.push({
+        //     model_name: mname2,
+        //     action: action,
+        //     reason: 'Confluence fail (level=' + confluenceLevel + ', dir=' + confluenceDirection + ')'
+        //   });
+        //   continue;
+        // }
+        // ========== END v5.1 Confluence ==========
 
         // ========== v5.0: Squeeze Releasing Check ==========
         if (squeezeReleasing) {
