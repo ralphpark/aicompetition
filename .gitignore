@@ -15,3 +15,18 @@ node_modules/
 
 # Temp files
 *.tmp
+
+# Environment variables (API keys)
+.env
+.env.*
+!.env.example
+
+# Proxy servers (contain API keys)
+claude-proxy/
+gemini-proxy/
+openai-proxy/
+imagen-proxy/
+
+# Next.js build
+ai-trading-arena/.next/
+ai-trading-arena/.env.local

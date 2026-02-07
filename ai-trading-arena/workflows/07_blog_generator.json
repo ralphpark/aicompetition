@@ -1,0 +1,354 @@
+{
+  "name": "07. AI Blog Generator (Fully Automated)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtHour": 9
+            },
+            {
+              "field": "hours",
+              "triggerAtHour": 21
+            }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Daily 9AM & 9PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Determine which content types to generate based on time\nconst hour = new Date().getHours();\nconst isMarketHours = hour >= 9 && hour <= 21;\n\n// Rotate content types\nconst contentTypes = [];\n\n// Morning: Market Analysis + Crypto News\nif (hour === 9) {\n  contentTypes.push(\n    { type: 'market_analysis', category: 'analysis' },\n    { type: 'crypto_news', category: 'crypto' }\n  );\n}\n\n// Evening: Tech News + System Update Check\nif (hour === 21) {\n  contentTypes.push(\n    { type: 'tech_news', category: 'tech' },\n    { type: 'system_update', category: 'update' }\n  );\n}\n\n// Fallback\nif (contentTypes.length === 0) {\n  contentTypes.push({ type: 'crypto_news', category: 'crypto' });\n}\n\nreturn contentTypes.map(ct => ({\n  json: {\n    ...ct,\n    timestamp: new Date().toISOString(),\n    date: new Date().toISOString().split('T')[0]\n  }\n}));"
+      },
+      "id": "determine-content",
+      "name": "Determine Content Types",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "market_data",
+        "returnAll": false,
+        "limit": 1,
+        "sort": {
+          "values": [
+            {
+              "column": "created_at",
+              "direction": "desc"
+            }
+          ]
+        }
+      },
+      "id": "get-market-data",
+      "name": "Get Latest Market Data",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [440, 100],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "leaderboard_view",
+        "returnAll": false,
+        "limit": 9,
+        "sort": {
+          "values": [
+            {
+              "column": "rank",
+              "direction": "asc"
+            }
+          ]
+        }
+      },
+      "id": "get-leaderboard",
+      "name": "Get AI Leaderboard",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [440, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "trading_decisions",
+        "returnAll": false,
+        "limit": 20,
+        "sort": {
+          "values": [
+            {
+              "column": "created_at",
+              "direction": "desc"
+            }
+          ]
+        }
+      },
+      "id": "get-recent-decisions",
+      "name": "Get Recent Decisions",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [440, 500],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const contentType = $('Determine Content Types').first().json;\nconst marketData = $('Get Latest Market Data').first()?.json || {};\nconst leaderboard = $('Get AI Leaderboard').all().map(i => i.json);\nconst decisions = $('Get Recent Decisions').all().map(i => i.json);\n\nconst date = new Date().toLocaleDateString('en-US', { \n  weekday: 'long', \n  year: 'numeric', \n  month: 'long', \n  day: 'numeric' \n});\n\n// Build context based on content type\nlet prompt = '';\nlet imagePrompt = '';\n\nif (contentType.type === 'market_analysis') {\n  const topModels = leaderboard.slice(0, 3);\n  const recentActions = decisions.filter(d => d.action !== 'NO_ACTION').slice(0, 5);\n  \n  prompt = `Write a comprehensive BTC market analysis blog post for ${date}.\n\nCurrent Market Data:\n- BTC Price: $${marketData.btc_price || 'N/A'}\n- 24h Change: ${marketData.price_change_24h || 'N/A'}%\n- Market Sentiment: ${marketData.sentiment || 'neutral'}\n\nTop AI Models:\n${topModels.map((m, i) => `${i+1}. ${m.name}: ROI ${m.roi_percent?.toFixed(2) || 0}%, Win Rate ${m.win_rate?.toFixed(1) || 0}%`).join('\\n')}\n\nRecent AI Decisions:\n${recentActions.map(d => `- ${d.model_id}: ${d.action} (Confidence: ${d.confidence}%)`).join('\\n')}\n\nInclude:\n1. Market overview with current price action\n2. Technical analysis summary\n3. AI models' current positions and reasoning\n4. Key levels to watch\n5. Risk assessment\n\nFormat with markdown. Start with # title. Write 500-800 words.`;\n  \n  imagePrompt = 'Abstract financial chart visualization with Bitcoin, candlestick patterns, green and red gradients, professional trading dashboard aesthetic, dark theme';\n\n} else if (contentType.type === 'crypto_news') {\n  prompt = `Write a crypto news digest blog post for ${date}.\n\nSearch and summarize the most important cryptocurrency news from today. Focus on:\n1. Major price movements and market events\n2. Regulatory developments\n3. Institutional adoption news\n4. Technology updates (Ethereum, L2s, etc.)\n5. Notable project announcements\n\nAlso mention how these events might affect our AI Trading Arena models.\n\nCurrent BTC Price: $${marketData.btc_price || 'N/A'}\n\nFormat with markdown. Start with # title like \"Crypto Daily: [Date]\". Write 400-600 words. Be informative and engaging.`;\n  \n  imagePrompt = 'Cryptocurrency news collage, Bitcoin and Ethereum logos, digital newspaper style, modern tech aesthetic, blue and gold color scheme';\n\n} else if (contentType.type === 'tech_news') {\n  prompt = `Write an AI and technology news blog post for ${date}.\n\nFocus on:\n1. Latest AI model developments (GPT, Claude, Gemini, open source models)\n2. AI in trading and finance news\n3. Significant tech industry updates\n4. How these developments relate to AI Trading Arena\n\nOur platform uses 9 AI models: GPT-5.2, Claude-Opus, Gemini-3.0-Pro, DeepSeek, Mistral, GROK-4.1, Kimi-k2, Qwen3-32B, MiMo-V2\n\nFormat with markdown. Start with # title. Write 400-600 words.`;\n  \n  imagePrompt = 'Futuristic AI neural network visualization, glowing nodes and connections, tech innovation theme, purple and cyan colors, digital art style';\n\n} else if (contentType.type === 'system_update') {\n  const champion = leaderboard[0];\n  \n  prompt = `Write a brief system update blog post for AI Trading Arena on ${date}.\n\nCurrent Champion: ${champion?.name || 'Unknown'} with ${champion?.roi_percent?.toFixed(2) || 0}% ROI\n\nInclude:\n1. Brief platform status update\n2. Current champion performance\n3. Any notable model behavior changes\n4. Upcoming features or improvements\n5. Community engagement stats (if available)\n\nKeep it concise - 300-400 words. Format with markdown. Start with # title.`;\n  \n  imagePrompt = 'System dashboard interface, status indicators, green checkmarks, modern UI design, dark mode aesthetic, monitoring theme';\n}\n\nreturn {\n  type: contentType.type,\n  category: contentType.category,\n  prompt,\n  imagePrompt,\n  date: contentType.date,\n  marketData,\n  leaderboard\n};"
+      },
+      "id": "build-prompt",
+      "name": "Build AI Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'claude-opus-4-20250514',\n  system: 'You are an expert cryptocurrency and AI technology writer for AI Trading Arena. Write engaging, informative blog posts. Always be accurate with data provided. Use professional but accessible language.',\n  messages: [\n    {\n      role: 'user',\n      content: $json.prompt\n    }\n  ],\n  max_tokens: 4096\n}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "generate-content",
+      "name": "Generate Content (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Build AI Prompt').first().json;\nconst response = $input.first().json;\nconst content = response.content?.[0]?.text || '';\n\n// Extract title\nconst titleMatch = content.match(/^#\\s+(.+)$/m);\nconst title = titleMatch ? titleMatch[1] : `${input.category} Update - ${input.date}`;\n\n// Generate excerpt\nconst lines = content.split('\\n\\n');\nconst firstParagraph = lines.find((line, idx) => idx > 0 && line && !line.startsWith('#'));\nconst excerpt = firstParagraph \n  ? firstParagraph.substring(0, 200).replace(/\\n/g, ' ') + '...'\n  : content.substring(0, 200) + '...';\n\n// Generate slug\nconst slug = title\n  .toLowerCase()\n  .replace(/[^a-z0-9]+/g, '-')\n  .replace(/(^-|-$)/g, '')\n  .substring(0, 50)\n  + '-' + Date.now().toString(36);\n\nreturn {\n  title,\n  content,\n  excerpt,\n  slug,\n  category: input.category,\n  imagePrompt: input.imagePrompt,\n  type: input.type,\n  ai_model: 'claude-opus-4',\n  date: input.date\n};"
+      },
+      "id": "parse-content",
+      "name": "Parse Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3459/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  prompt: $json.imagePrompt,\n  aspectRatio: '16:9'\n}) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "generate-image",
+      "name": "Generate Image (Imagen)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $('Parse Content').first().json;\nconst imageResult = $input.first().json;\n\n// Check if image generation succeeded\nconst hasImage = imageResult.success && imageResult.dataUrl;\n\nreturn {\n  slug: content.slug,\n  title: content.title,\n  content: content.content,\n  excerpt: content.excerpt,\n  category: content.category,\n  cover_image: hasImage ? imageResult.dataUrl : null,\n  cover_image_prompt: content.imagePrompt,\n  ai_generated: true,\n  ai_model: content.ai_model,\n  is_published: true,\n  published_at: new Date().toISOString()\n};"
+      },
+      "id": "prepare-insert",
+      "name": "Prepare Insert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "blog_posts",
+        "columns": "slug,title,content,excerpt,category,cover_image,cover_image_prompt,ai_generated,ai_model,is_published,published_at"
+      },
+      "id": "save-to-supabase",
+      "name": "Save to Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1760, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const saved = $input.first().json;\nconsole.log('Blog post saved:', saved.slug);\n\nreturn {\n  success: true,\n  slug: saved.slug,\n  title: saved.title,\n  category: saved.category,\n  published_at: saved.published_at,\n  url: `https://ai-trading-arena.com/blog/${saved.slug}`\n};"
+      },
+      "id": "log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, 300]
+    }
+  ],
+  "connections": {
+    "Daily 9AM & 9PM": {
+      "main": [
+        [
+          {
+            "node": "Determine Content Types",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Content Types": {
+      "main": [
+        [
+          {
+            "node": "Get Latest Market Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get AI Leaderboard",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Recent Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest Market Data": {
+      "main": [
+        [
+          {
+            "node": "Build AI Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get AI Leaderboard": {
+      "main": [
+        [
+          {
+            "node": "Build AI Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Recent Decisions": {
+      "main": [
+        [
+          {
+            "node": "Build AI Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate Content (Claude)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Content (Claude)": {
+      "main": [
+        [
+          {
+            "node": "Parse Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Content": {
+      "main": [
+        [
+          {
+            "node": "Generate Image (Imagen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image (Imagen)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Insert": {
+      "main": [
+        [
+          {
+            "node": "Save to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "pinData": {}
+}

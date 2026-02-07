@@ -1,0 +1,236 @@
+'use client'
+
+import { useState } from 'react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { getModelByName } from '@/lib/constants/models'
+import { cn } from '@/lib/utils'
+import { ChevronDown, ChevronUp, Target, StopCircle, TrendingUp, Clock } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import type { AIDecision } from '@/types/database'
+
+interface DecisionCardProps {
+  decision: AIDecision & { model_name?: string; provider?: string }
+  showModel?: boolean
+}
+
+const actionConfig: Record<string, {
+  label: string
+  icon: string
+  bgColor: string
+  borderColor: string
+  textColor: string
+}> = {
+  OPEN_LONG: {
+    label: 'LONG',
+    icon: '📈',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500',
+    textColor: 'text-emerald-600',
+  },
+  OPEN_SHORT: {
+    label: 'SHORT',
+    icon: '📉',
+    bgColor: 'bg-rose-500/10',
+    borderColor: 'border-rose-500',
+    textColor: 'text-rose-600',
+  },
+  CLOSE_LONG: {
+    label: 'CLOSE LONG',
+    icon: '💰',
+    bgColor: 'bg-purple-500/10',
+    borderColor: 'border-purple-500',
+    textColor: 'text-purple-600',
+  },
+  CLOSE_SHORT: {
+    label: 'CLOSE SHORT',
+    icon: '💰',
+    bgColor: 'bg-purple-500/10',
+    borderColor: 'border-purple-500',
+    textColor: 'text-purple-600',
+  },
+  NO_ACTION: {
+    label: 'HOLD',
+    icon: '⏸️',
+    bgColor: 'bg-slate-500/10',
+    borderColor: 'border-slate-400',
+    textColor: 'text-slate-600',
+  },
+}
+
+function formatTimeAgo(dateString: string) {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffMins < 1) return 'just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  return `${diffDays}d ago`
+}
+
+export function DecisionCard({ decision, showModel = true }: DecisionCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const character = decision.model_name ? getModelByName(decision.model_name) : undefined
+  const config = actionConfig[decision.action] || actionConfig.NO_ACTION
+
+  const shouldShowExpand = decision.reasoning && decision.reasoning.length > 150
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      layout
+    >
+      <Card className={cn(
+        "overflow-hidden hover:shadow-md transition-all border-l-4",
+        config.borderColor,
+        config.bgColor
+      )}>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {showModel && (
+                <>
+                  <motion.span
+                    whileHover={{ scale: 1.1 }}
+                    className="text-3xl"
+                  >
+                    {character?.emoji || '🤖'}
+                  </motion.span>
+                  <div>
+                    <p className="font-semibold">{decision.model_name || 'Unknown'}</p>
+                    <p className="text-xs text-gray-500">{decision.provider}</p>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge className={cn(
+                "text-sm font-bold px-3 py-1",
+                config.textColor,
+                config.bgColor,
+                "border",
+                config.borderColor
+              )}>
+                {config.icon} {config.label}
+              </Badge>
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Clock className="w-3 h-3" />
+                {formatTimeAgo(decision.created_at)}
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          {/* Confidence Bar */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-sm text-gray-500 w-20">Confidence</span>
+            <div className="flex-1 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${decision.confidence}%` }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className={cn(
+                  "h-full rounded-full",
+                  decision.confidence >= 80 ? "bg-green-500" :
+                  decision.confidence >= 60 ? "bg-emerald-500" :
+                  decision.confidence >= 40 ? "bg-yellow-500" : "bg-red-500"
+                )}
+              />
+            </div>
+            <span className={cn(
+              "text-sm font-mono font-bold w-12 text-right",
+              decision.confidence >= 80 ? "text-green-600" :
+              decision.confidence >= 60 ? "text-emerald-600" :
+              decision.confidence >= 40 ? "text-yellow-600" : "text-red-600"
+            )}>
+              {decision.confidence}%
+            </span>
+          </div>
+
+          {/* Price Info */}
+          {decision.entry_price && (
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border dark:border-gray-700">
+                <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                  <Target className="w-3 h-3" />
+                  Entry
+                </div>
+                <p className="font-mono font-semibold">
+                  ${decision.entry_price.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                </p>
+              </div>
+              {decision.stop_loss && (
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 border border-red-200 dark:border-red-800">
+                  <div className="flex items-center gap-1 text-xs text-red-600 mb-1">
+                    <StopCircle className="w-3 h-3" />
+                    Stop Loss
+                  </div>
+                  <p className="font-mono font-semibold text-red-600">
+                    ${decision.stop_loss.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                  </p>
+                </div>
+              )}
+              {decision.take_profit && (
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-1 text-xs text-green-600 mb-1">
+                    <TrendingUp className="w-3 h-3" />
+                    Take Profit
+                  </div>
+                  <p className="font-mono font-semibold text-green-600">
+                    ${decision.take_profit.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Reasoning */}
+          {decision.reasoning && (
+            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border dark:border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Reasoning
+                </span>
+                {shouldShowExpand && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="h-6 text-xs text-blue-600 hover:text-blue-700"
+                  >
+                    {isExpanded ? (
+                      <>Less <ChevronUp className="w-3 h-3 ml-1" /></>
+                    ) : (
+                      <>More <ChevronDown className="w-3 h-3 ml-1" /></>
+                    )}
+                  </Button>
+                )}
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={isExpanded ? 'expanded' : 'collapsed'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className={cn(
+                    "text-sm text-gray-700 dark:text-gray-300 leading-relaxed",
+                    !isExpanded && shouldShowExpand && "line-clamp-2"
+                  )}
+                >
+                  {decision.reasoning}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
