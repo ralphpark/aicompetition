@@ -27,6 +27,12 @@ gemini-proxy/
 openai-proxy/
 imagen-proxy/
 
+# n8n Workflows (contain API keys and credentials)
+workflows/
+
+# Docs (internal planning/session logs)
+docs/
+
 # Next.js build
 ai-trading-arena/.next/
 ai-trading-arena/.env.local
