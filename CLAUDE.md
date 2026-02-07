@@ -1,4 +1,4 @@
-# AI Trading Arena Project
+# AI Trading Arena Project (v3.0)
 
 ## 프로젝트 개요
 
