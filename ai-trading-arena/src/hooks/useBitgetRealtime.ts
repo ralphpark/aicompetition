@@ -29,12 +29,14 @@ export function useBitgetRealtime() {
     const losingTrades = closeTrades.filter(t => (t.pnl || 0) <= 0).length
     const totalPnl = closeTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
 
+    // Sum all fees from all successful trades (open + close)
+    const allSuccessful = tradeList.filter(t => t.status === 'SUCCESS')
+    const totalFees = allSuccessful.reduce((sum, t) => sum + (t.fee || 0), 0)
+
     const initialBalance = accountConfig?.initial_balance || 10000
     // Use actual Bitget balance (synced after each trade) instead of calculated
     const currentBalance = accountConfig?.current_balance || initialBalance
     const netPnl = currentBalance - initialBalance
-    // Total fees = gross trading PnL - actual net result (includes trading + funding fees)
-    const totalFees = Math.max(0, totalPnl - netPnl)
     const roi = initialBalance > 0 ? ((currentBalance - initialBalance) / initialBalance) * 100 : 0
     const winRate = closeTrades.length > 0 ? (winningTrades / closeTrades.length) * 100 : 0
 
