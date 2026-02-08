@@ -4,12 +4,15 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { BitgetAccountConfig, BitgetTradeExecution, BitgetAccountStats } from '@/types/database'
 
+const POLL_INTERVAL = 30_000 // 30 seconds
+
 export function useBitgetRealtime() {
   const [config, setConfig] = useState<BitgetAccountConfig | null>(null)
   const [trades, setTrades] = useState<BitgetTradeExecution[]>([])
   const [stats, setStats] = useState<BitgetAccountStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
   // Stable supabase client reference
   const supabase = useMemo(() => createClient(), [])
@@ -50,9 +53,9 @@ export function useBitgetRealtime() {
     }
   }, [])
 
-  // Fetch initial data
-  const fetchData = useCallback(async () => {
-    setIsLoading(true)
+  // Fetch data (used for initial load + polling)
+  const fetchData = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoading(true)
     setError(null)
 
     try {
@@ -81,19 +84,25 @@ export function useBitgetRealtime() {
 
       setTrades(tradesData || [])
       setStats(calculateStats(tradesData || [], configData))
+      setLastUpdated(new Date())
     } catch (err) {
       console.error('Error fetching bitget data:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch data')
     } finally {
-      setIsLoading(false)
+      if (showLoading) setIsLoading(false)
     }
   }, [supabase, calculateStats])
 
-  // Set up realtime subscription - runs only once
+  // Set up realtime subscription + polling
   useEffect(() => {
     fetchData()
 
-    // Subscribe to trade executions
+    // --- Polling fallback (every 30s, silent) ---
+    const pollTimer = setInterval(() => {
+      fetchData(false)
+    }, POLL_INTERVAL)
+
+    // --- Supabase Realtime (instant updates) ---
     const tradesChannel = supabase
       .channel('bitget_trades_realtime')
       .on(
@@ -121,11 +130,11 @@ export function useBitgetRealtime() {
               return newTrades
             })
           }
+          setLastUpdated(new Date())
         }
       )
       .subscribe()
 
-    // Subscribe to config changes
     const configChannel = supabase
       .channel('bitget_config_realtime')
       .on(
@@ -138,11 +147,13 @@ export function useBitgetRealtime() {
         (payload) => {
           console.log('Bitget config update:', payload)
           setConfig(payload.new as BitgetAccountConfig)
+          setLastUpdated(new Date())
         }
       )
       .subscribe()
 
     return () => {
+      clearInterval(pollTimer)
       supabase.removeChannel(tradesChannel)
       supabase.removeChannel(configChannel)
     }
@@ -154,6 +165,7 @@ export function useBitgetRealtime() {
     stats,
     isLoading,
     error,
-    refetch: fetchData
+    lastUpdated,
+    refetch: () => fetchData(false)
   }
 }
