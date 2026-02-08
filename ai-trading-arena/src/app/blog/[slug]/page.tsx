@@ -1,12 +1,13 @@
 import { Header } from '@/components/layout/Header'
 import { PostContent } from '@/components/blog/PostContent'
 import { TradingViewWidget } from '@/components/blog/TradingViewWidget'
+import { BlogAdminControls } from '@/components/blog/BlogAdminControls'
 import { ArrowLeft, Calendar, Share2, Twitter, Linkedin } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { BlogCategory } from '@/types/database'
 import { formatDate } from '@/lib/utils'
-import { getBlogPost } from '@/app/actions/blog'
+import { getBlogPost, getIsBlogAdmin } from '@/app/actions/blog'
 
 const categoryConfig: Record<BlogCategory, { label: string; color: string; icon: string }> = {
   update: { label: 'Update', color: 'bg-blue-100 text-blue-700', icon: '📢' },
@@ -28,7 +29,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const { post } = await getBlogPost(slug)
+  const [{ post }, isAdmin] = await Promise.all([
+    getBlogPost(slug),
+    getIsBlogAdmin(),
+  ])
 
   if (!post) {
     notFound()
@@ -50,6 +54,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <ArrowLeft className="w-4 h-4" />
           Back to Blog
         </Link>
+
+        {/* Admin Controls */}
+        {isAdmin && (
+          <BlogAdminControls
+            slug={post.slug}
+            title={post.title}
+            content={post.content}
+            excerpt={post.excerpt}
+            category={post.category}
+            isPublished={!!post.published_at}
+          />
+        )}
 
         {/* Cover Image */}
         {post.cover_image && (

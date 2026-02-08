@@ -2,7 +2,7 @@ import { Header } from '@/components/layout/Header'
 import { BlogContent } from '@/components/blog/CategoryFilter'
 import { BookOpen } from 'lucide-react'
 import type { BlogCategory } from '@/types/database'
-import { getBlogPosts } from '@/app/actions/blog'
+import { getBlogPosts, getIsBlogAdmin } from '@/app/actions/blog'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,8 +24,10 @@ const fallbackPosts = [
 ]
 
 export default async function BlogPage() {
-  // Fetch ALL posts once from Supabase
-  const { posts: dbPosts } = await getBlogPosts()
+  const [{ posts: dbPosts }, isAdmin] = await Promise.all([
+    getBlogPosts(),
+    getIsBlogAdmin(),
+  ])
 
   // Use database posts or fallback
   const posts = dbPosts.length > 0 ? dbPosts : fallbackPosts
@@ -47,7 +49,7 @@ export default async function BlogPage() {
         </div>
 
         {/* Client-side filter + posts grid */}
-        <BlogContent posts={posts} />
+        <BlogContent posts={posts} isAdmin={isAdmin} />
 
         {/* Blog Info */}
         <div className="max-w-2xl mx-auto mt-16">

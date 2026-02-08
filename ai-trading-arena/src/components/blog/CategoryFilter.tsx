@@ -6,11 +6,11 @@ import { BookOpen } from 'lucide-react'
 import type { BlogCategory } from '@/types/database'
 
 const categories: { value: BlogCategory | ''; label: string; icon: string }[] = [
-  { value: '', label: 'All Posts', icon: '📚' },
-  { value: 'update', label: 'Updates', icon: '📢' },
-  { value: 'analysis', label: 'Analysis', icon: '📊' },
-  { value: 'tech', label: 'Tech', icon: '🔧' },
-  { value: 'crypto', label: 'Crypto', icon: '₿' },
+  { value: '', label: 'All Posts', icon: '\uD83D\uDCDA' },
+  { value: 'update', label: 'Updates', icon: '\uD83D\uDCE2' },
+  { value: 'analysis', label: 'Analysis', icon: '\uD83D\uDCCA' },
+  { value: 'tech', label: 'Tech', icon: '\uD83D\uDD27' },
+  { value: 'crypto', label: 'Crypto', icon: '\u20BF' },
 ]
 
 interface Post {
@@ -22,7 +22,7 @@ interface Post {
   cover_image?: string | null
 }
 
-export function BlogContent({ posts }: { posts: Post[] }) {
+export function BlogContent({ posts, isAdmin }: { posts: Post[]; isAdmin?: boolean }) {
   const [selectedCategory, setSelectedCategory] = useState<BlogCategory | ''>('')
 
   const filteredPosts = selectedCategory
@@ -61,6 +61,7 @@ export function BlogContent({ posts }: { posts: Post[] }) {
               category={post.category}
               publishedAt={post.published_at}
               coverImage={post.cover_image}
+              isAdmin={isAdmin}
             />
           ))}
         </div>

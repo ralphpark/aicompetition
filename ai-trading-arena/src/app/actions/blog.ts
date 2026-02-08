@@ -1,7 +1,25 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 import type { BlogPost, BlogCategory } from '@/types/database'
+
+async function checkIsAdmin(): Promise<{ isAdmin: boolean; userId: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { isAdmin: false, userId: null }
+  const { data } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single()
+  return { isAdmin: data?.is_admin === true, userId: user.id }
+}
+
+export async function getIsBlogAdmin(): Promise<boolean> {
+  const { isAdmin } = await checkIsAdmin()
+  return isAdmin
+}
 
 export async function getBlogPosts(options?: {
   category?: BlogCategory
@@ -102,6 +120,9 @@ export async function updateBlogPost(
     publish: boolean
   }>
 ): Promise<{ post?: BlogPost; error?: string }> {
+  const { isAdmin } = await checkIsAdmin()
+  if (!isAdmin) return { error: 'Admin access required' }
+
   const supabase = await createClient()
 
   const updateData: Record<string, unknown> = {}
@@ -127,10 +148,15 @@ export async function updateBlogPost(
     return { error: 'Failed to update blog post' }
   }
 
+  revalidatePath('/blog')
+  revalidatePath(`/blog/${slug}`)
   return { post: data as BlogPost }
 }
 
 export async function deleteBlogPost(slug: string): Promise<{ success: boolean; error?: string }> {
+  const { isAdmin } = await checkIsAdmin()
+  if (!isAdmin) return { success: false, error: 'Admin access required' }
+
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -143,6 +169,7 @@ export async function deleteBlogPost(slug: string): Promise<{ success: boolean; 
     return { success: false, error: 'Failed to delete blog post' }
   }
 
+  revalidatePath('/blog')
   return { success: true }
 }
 
