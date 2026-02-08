@@ -1,7 +1,7 @@
 export interface ModelCharacter {
   id: string
   name: string
-  provider: 'OpenAI' | 'Anthropic' | 'Google' | 'DeepSeek' | 'Mistral' | 'Groq' | 'OpenRouter'
+  provider: 'OpenAI' | 'Anthropic' | 'Google' | 'DeepSeek' | 'Mistral' | 'xAI' | 'Moonshot AI' | 'Alibaba' | 'Xiaomi'
   emoji: string
   color: string
   bgColor: string
@@ -63,7 +63,7 @@ export const MODEL_CHARACTERS: ModelCharacter[] = [
   {
     id: '375a9474-ef42-4037-a161-cf2f458edf2d',
     name: 'GROK-4.1',
-    provider: 'OpenRouter',
+    provider: 'xAI',
     emoji: '⚡',
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-500',
@@ -73,7 +73,7 @@ export const MODEL_CHARACTERS: ModelCharacter[] = [
   {
     id: '14a535ce-2198-4bd6-b6d9-12c6a65d48c9',
     name: 'Kimi-k2',
-    provider: 'Groq',
+    provider: 'Moonshot AI',
     emoji: '🐉',
     color: 'text-red-600',
     bgColor: 'bg-red-500',
@@ -83,7 +83,7 @@ export const MODEL_CHARACTERS: ModelCharacter[] = [
   {
     id: '3e4d75e3-b71a-42fd-ab24-657af640404f',
     name: 'Qwen3-32B',
-    provider: 'Groq',
+    provider: 'Alibaba',
     emoji: '🏯',
     color: 'text-amber-600',
     bgColor: 'bg-amber-500',
@@ -93,7 +93,7 @@ export const MODEL_CHARACTERS: ModelCharacter[] = [
   {
     id: 'c7567aec-23ba-4342-a2c1-69855dd2eff6',
     name: 'MiMo-V2',
-    provider: 'OpenRouter',
+    provider: 'Xiaomi',
     emoji: '🎯',
     color: 'text-pink-600',
     bgColor: 'bg-pink-500',
@@ -116,6 +116,8 @@ export const PROVIDER_COLORS: Record<string, string> = {
   'Google': 'bg-purple-500',
   'DeepSeek': 'bg-cyan-500',
   'Mistral': 'bg-blue-500',
-  'Groq': 'bg-red-500',
-  'OpenRouter': 'bg-yellow-500',
+  'xAI': 'bg-yellow-500',
+  'Moonshot AI': 'bg-red-500',
+  'Alibaba': 'bg-amber-500',
+  'Xiaomi': 'bg-pink-500',
 }

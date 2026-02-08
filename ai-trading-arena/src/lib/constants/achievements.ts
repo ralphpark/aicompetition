@@ -19,7 +19,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first-visit',
     name: 'Welcome to the Arena',
-    description: 'Visit the AI Trading Arena for the first time',
+    description: 'Visit PnL Grand Prix for the first time',
     icon: '👋',
     category: 'participation',
     requirement: { type: 'special', count: 1 },

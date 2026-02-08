@@ -73,10 +73,25 @@ function formatTimeAgo(dateString: string) {
   return `${diffDays}d ago`
 }
 
+function formatBlockReason(reason: string | null | undefined): string | null {
+  if (!reason) return null
+  if (reason.startsWith('Has LONG')) return 'Already holding a LONG position — duplicate entry blocked'
+  if (reason.startsWith('Has SHORT')) return 'Already holding a SHORT position — duplicate entry blocked'
+  if (reason.startsWith('RANGING market')) return `Market is ranging with weak trend — ${reason.match(/\(.*\)/)?.[0] || ''}`
+  if (reason.startsWith('Max pos')) return 'Maximum open positions reached (4/4)'
+  if (reason.startsWith('R:R too low')) return `Risk/Reward ratio too low — ${reason.match(/\(.*\)/)?.[0] || ''}`
+  if (reason.startsWith('Squeeze releasing')) return 'Bollinger Band squeeze detected — waiting for breakout direction'
+  if (reason.startsWith('No pos')) return 'No open position to close'
+  if (reason.startsWith('No portfolio')) return 'Portfolio not found for this model'
+  if (reason.startsWith('Confluence fail')) return `Insufficient technical confluence — ${reason.match(/\(.*\)/)?.[0] || ''}`
+  return reason
+}
+
 export function DecisionCard({ decision, showModel = true }: DecisionCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const character = decision.model_name ? getModelByName(decision.model_name) : undefined
   const config = actionConfig[decision.action] || actionConfig.NO_ACTION
+  const isBlocked = decision.execution_status === 'blocked'
 
   const shouldShowExpand = decision.reasoning && decision.reasoning.length > 150
 
@@ -88,8 +103,9 @@ export function DecisionCard({ decision, showModel = true }: DecisionCardProps) 
     >
       <Card className={cn(
         "overflow-hidden hover:shadow-md transition-all border-l-4",
-        config.borderColor,
-        config.bgColor
+        isBlocked
+          ? "border-amber-500 bg-amber-50/50 dark:bg-amber-900/10 opacity-80"
+          : cn(config.borderColor, config.bgColor)
       )}>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
@@ -111,14 +127,18 @@ export function DecisionCard({ decision, showModel = true }: DecisionCardProps) 
             </div>
             <div className="flex items-center gap-3">
               <Badge className={cn(
-                "text-sm font-bold px-3 py-1",
-                config.textColor,
-                config.bgColor,
-                "border",
-                config.borderColor
+                "text-sm font-bold px-3 py-1 border",
+                isBlocked
+                  ? "text-amber-600 bg-amber-100/50 border-amber-500 dark:text-amber-400 dark:bg-amber-900/30 dark:border-amber-600"
+                  : cn(config.textColor, config.bgColor, config.borderColor)
               )}>
                 {config.icon} {config.label}
               </Badge>
+              {isBlocked && (
+                <Badge className="text-sm font-bold px-3 py-1 bg-amber-500/20 text-amber-700 border border-amber-500 dark:text-amber-300">
+                  ⛔ BLOCKED
+                </Badge>
+              )}
               <div className="flex items-center gap-1 text-xs text-gray-500">
                 <Clock className="w-3 h-3" />
                 {formatTimeAgo(decision.created_at)}
@@ -128,6 +148,13 @@ export function DecisionCard({ decision, showModel = true }: DecisionCardProps) 
         </CardHeader>
 
         <CardContent>
+          {/* Block Reason */}
+          {isBlocked && decision.block_reason && (
+            <p className="text-xs text-red-600 dark:text-red-400 mb-3 font-medium">
+              ⚠ {formatBlockReason(decision.block_reason)}
+            </p>
+          )}
+
           {/* Confidence Bar */}
           <div className="flex items-center gap-3 mb-4">
             <span className="text-sm text-gray-500 w-20">Confidence</span>
@@ -156,7 +183,10 @@ export function DecisionCard({ decision, showModel = true }: DecisionCardProps) 
 
           {/* Price Info */}
           {decision.entry_price && (
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className={cn(
+              "grid grid-cols-3 gap-3 mb-4",
+              isBlocked && "opacity-50 line-through"
+            )}>
               <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border dark:border-gray-700">
                 <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
                   <Target className="w-3 h-3" />

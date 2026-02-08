@@ -17,7 +17,7 @@ import Link from 'next/link'
 import type { ContributorLeaderboardEntry, RewardStatus, SuggestionStatus } from '@/types/database'
 
 export const metadata = {
-  title: 'Rewards - AI Trading Arena',
+  title: 'Rewards - PnL Grand Prix',
   description: 'Track your rewards and system improvement metrics'
 }
 

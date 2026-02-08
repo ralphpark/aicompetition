@@ -1,4 +1,4 @@
-// AI Trading Arena v2.0 - Database Types
+// PnL Grand Prix v2.0 - Database Types
 
 // =====================================================
 // Core Trading Types
@@ -47,6 +47,8 @@ export interface AIDecision {
   entry_price: number | null
   stop_loss: number | null
   take_profit: number | null
+  execution_status?: 'executed' | 'blocked' | 'pending'
+  block_reason?: string | null
   created_at: string
 }
 

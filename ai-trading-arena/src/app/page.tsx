@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
+import { AuthButton } from '@/components/auth/AuthButton'
 import {
   HeroSection,
   WhySection,
@@ -23,7 +24,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">🏁</span>
-            <span className="text-xl font-bold text-white">AI Trading Arena</span>
+            <span className="text-xl font-[var(--font-racing)] tracking-wide text-white">PnL Grand Prix</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/leaderboard" className="text-gray-400 hover:text-white transition-colors text-sm">
@@ -46,18 +47,7 @@ export default function HomePage() {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
-            <Link
-              href="/auth/login"
-              className="text-gray-400 hover:text-white transition-colors text-sm hidden sm:block"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/leaderboard"
-              className="bg-green-500 hover:bg-green-600 text-black font-medium px-4 py-2 rounded-lg text-sm transition-colors"
-            >
-              View Leaderboard
-            </Link>
+            <AuthButton />
           </div>
         </div>
       </header>
@@ -102,7 +92,7 @@ export default function HomePage() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-2xl">🏁</span>
-                <span className="text-lg font-bold text-white">AI Trading Arena</span>
+                <span className="text-lg font-[var(--font-racing)] tracking-wide text-white">PnL Grand Prix</span>
               </div>
               <p className="text-gray-400 text-sm">
                 An experiment in AI-powered trading competition and community-driven improvement.
@@ -146,7 +136,7 @@ export default function HomePage() {
               Built with Next.js, Supabase, and n8n
             </p>
             <p className="text-gray-500 text-sm">
-              AI Trading Arena - {new Date().getFullYear()}
+              PnL Grand Prix - {new Date().getFullYear()}
             </p>
           </div>
         </div>

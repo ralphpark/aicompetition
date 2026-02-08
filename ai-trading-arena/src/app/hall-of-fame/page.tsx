@@ -6,7 +6,7 @@ import Link from 'next/link'
 import type { HallOfFameEntry, UserTier } from '@/types/database'
 
 export const metadata = {
-  title: 'Hall of Fame - AI Trading Arena',
+  title: 'Hall of Fame - PnL Grand Prix',
   description: 'Community champions who improved trading system performance',
 }
 

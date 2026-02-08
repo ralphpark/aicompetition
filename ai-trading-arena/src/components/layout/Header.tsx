@@ -33,7 +33,7 @@ export function Header() {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-2xl">🏁</span>
-          <h1 className="text-xl font-bold">AI Trading Arena</h1>
+          <h1 className="text-xl font-[var(--font-racing)] tracking-wide">PnL Grand Prix</h1>
         </Link>
         <nav className="hidden md:flex items-center gap-4">
           {navItems.map((item) => (

@@ -49,7 +49,7 @@ export function WhySection() {
             The Philosophy
           </span>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-            Why AI Trading Arena?
+            Why PnL Grand Prix?
           </h2>
           <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
             We believe the best way to understand AI capabilities is to watch them compete

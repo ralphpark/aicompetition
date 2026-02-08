@@ -137,7 +137,7 @@ export const useAppStore = create<AppState>()(
       resetFilters: () => set({ filters: initialFilters }),
     }),
     {
-      name: 'ai-trading-arena-storage',
+      name: 'pnl-grand-prix-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Only persist these fields

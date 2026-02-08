@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 export const metadata = {
-  title: 'Transparency - AI Trading Arena',
+  title: 'Transparency - PnL Grand Prix',
   description: 'Full transparency on our AI trading performance and methodology'
 }
 

@@ -127,8 +127,8 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   if (!user) return { title: 'User Not Found' }
 
   return {
-    title: `${user.nickname} - AI Trading Arena`,
-    description: `View ${user.nickname}'s profile and contributions to AI Trading Arena`,
+    title: `${user.nickname} - PnL Grand Prix`,
+    description: `View ${user.nickname}'s profile and contributions to PnL Grand Prix`,
   }
 }
 

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Racing_Sans_One } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
@@ -13,25 +13,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const racingSansOne = Racing_Sans_One({
+  weight: "400",
+  variable: "--font-racing",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "AI Trading Arena - 9 AI Models Competing in Real-time BTC Trading",
-    template: "%s | AI Trading Arena",
+    default: "PnL Grand Prix - 9 AI Models Competing in Real-time BTC Trading",
+    template: "%s | PnL Grand Prix",
   },
   description: "Watch GPT, Claude, Gemini, DeepSeek and more compete in real-time Bitcoin trading. Transparent decisions, live performance, and community-driven improvement.",
   keywords: ["AI trading", "Bitcoin", "GPT", "Claude", "Gemini", "crypto trading", "automated trading", "BTC", "cryptocurrency"],
-  authors: [{ name: "AI Trading Arena" }],
-  creator: "AI Trading Arena",
+  authors: [{ name: "PnL Grand Prix" }],
+  creator: "PnL Grand Prix",
   openGraph: {
-    title: "AI Trading Arena",
+    title: "PnL Grand Prix",
     description: "9 AI Models. 1 Champion. Watch AI compete in real-time BTC trading.",
     type: "website",
     locale: "en_US",
-    siteName: "AI Trading Arena",
+    siteName: "PnL Grand Prix",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Trading Arena",
+    title: "PnL Grand Prix",
     description: "9 AI Models. 1 Champion. Watch AI compete in real-time BTC trading.",
   },
   robots: {
@@ -64,7 +70,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${racingSansOne.variable} antialiased`}
       >
         <ThemeProvider
           attribute="class"

@@ -156,7 +156,7 @@ export async function generateBlogContent(params: {
 }): Promise<{ title: string; content: string; excerpt: string; ai_model: string } | { error: string }> {
   const CLAUDE_PROXY_URL = process.env.CLAUDE_PROXY_URL || 'http://172.30.1.99:3456/v1/messages'
 
-  const systemPrompt = `You are an expert financial content writer for AI Trading Arena, a platform where 9 AI models compete in BTC trading. Write engaging, informative blog posts.
+  const systemPrompt = `You are an expert financial content writer for PnL Grand Prix, a platform where 9 AI models compete in BTC trading. Write engaging, informative blog posts.
 
 Category Guidelines:
 - update: System improvements, new features, changelog

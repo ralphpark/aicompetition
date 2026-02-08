@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: PageProps) {
   const model = MODEL_CHARACTERS.find(m => m.id === id)
 
   return {
-    title: model ? `${model.name} Trade History - AI Trading Arena` : 'Trade History - AI Trading Arena',
-    description: model ? `Complete trade history for ${model.name} in the AI Trading Arena` : 'Trade history',
+    title: model ? `${model.name} Trade History - PnL Grand Prix` : 'Trade History - PnL Grand Prix',
+    description: model ? `Complete trade history for ${model.name} in the PnL Grand Prix` : 'Trade history',
   }
 }
 

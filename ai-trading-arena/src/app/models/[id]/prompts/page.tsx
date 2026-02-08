@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PageProps) {
   const model = MODEL_CHARACTERS.find(m => m.id === id)
 
   return {
-    title: model ? `${model.name} Prompt History - AI Trading Arena` : 'Prompt History - AI Trading Arena',
+    title: model ? `${model.name} Prompt History - PnL Grand Prix` : 'Prompt History - PnL Grand Prix',
     description: model ? `View the AI prompts and reasoning for ${model.name}'s trading decisions` : 'AI prompt history',
   }
 }
