@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, TrendingDown, Target, BarChart3, Wallet, PiggyBank } from 'lucide-react'
+import { TrendingUp, TrendingDown, Target, BarChart3, Wallet, Receipt } from 'lucide-react'
 import type { BitgetAccountStats } from '@/types/database'
 
 interface AccountStatsProps {
@@ -23,8 +23,10 @@ export function AccountStats({ stats, isLoading }: AccountStatsProps) {
   }
 
   const roi = stats?.roi || 0
-  const pnl = stats?.totalPnl || 0
-  const isProfit = pnl >= 0
+  const netPnl = stats?.netPnl || 0
+  const grossPnl = stats?.totalPnl || 0
+  const totalFees = stats?.totalFees || 0
+  const isProfit = netPnl >= 0
 
   const statItems = [
     {
@@ -36,15 +38,24 @@ export function AccountStats({ stats, isLoading }: AccountStatsProps) {
     },
     {
       icon: isProfit ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />,
-      label: 'Total P&L',
-      value: `${isProfit ? '+' : ''}$${pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      label: 'Net P&L',
+      value: `${isProfit ? '+' : ''}$${netPnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      subValue: `Gross: ${grossPnl >= 0 ? '+' : ''}$${grossPnl.toFixed(2)}`,
       color: isProfit ? 'text-emerald-600' : 'text-red-600',
       bgColor: isProfit ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'
     },
     {
+      icon: <Receipt className="w-5 h-5" />,
+      label: 'Total Fees',
+      value: `$${totalFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50 dark:bg-orange-900/20'
+    },
+    {
       icon: <BarChart3 className="w-5 h-5" />,
-      label: 'Account ROI',
+      label: 'ROI',
       value: `${roi >= 0 ? '+' : ''}${roi.toFixed(2)}%`,
+      subValue: `${stats?.totalTrades || 0} trades`,
       color: roi >= 0 ? 'text-emerald-600' : 'text-red-600',
       bgColor: roi >= 0 ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'
     },
@@ -52,24 +63,19 @@ export function AccountStats({ stats, isLoading }: AccountStatsProps) {
       icon: <Target className="w-5 h-5" />,
       label: 'Win Rate',
       value: `${(stats?.winRate || 0).toFixed(1)}%`,
+      subValue: `${stats?.winningTrades || 0}W / ${stats?.losingTrades || 0}L`,
       color: (stats?.winRate || 0) >= 50 ? 'text-emerald-600' : 'text-amber-600',
       bgColor: (stats?.winRate || 0) >= 50 ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-amber-50 dark:bg-amber-900/20'
     },
     {
-      icon: <TrendingUp className="w-5 h-5 text-green-500" />,
-      label: 'Winning Trades',
-      value: stats?.winningTrades || 0,
-      subValue: `of ${stats?.totalTrades || 0}`,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50 dark:bg-green-900/20'
-    },
-    {
-      icon: <TrendingDown className="w-5 h-5 text-red-500" />,
-      label: 'Losing Trades',
-      value: stats?.losingTrades || 0,
-      subValue: `of ${stats?.totalTrades || 0}`,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50 dark:bg-red-900/20'
+      icon: isProfit ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />,
+      label: 'Avg P&L',
+      value: (stats?.totalTrades || 0) > 0
+        ? `${(netPnl / (stats?.totalTrades || 1)) >= 0 ? '+' : ''}$${(netPnl / (stats?.totalTrades || 1)).toFixed(2)}`
+        : '$0.00',
+      subValue: 'per trade',
+      color: isProfit ? 'text-emerald-600' : 'text-red-600',
+      bgColor: isProfit ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'
     }
   ]
 

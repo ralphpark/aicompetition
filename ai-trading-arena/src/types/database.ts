@@ -412,7 +412,9 @@ export interface BitgetTradeExecution {
   bitget_order_id: string | null
   position_status: string
   status: string
-  pnl: number
+  pnl: number | null
+  fee: number
+  order_type: string
   error_message: string | null
   executed_at: string
   created_at: string
@@ -424,6 +426,8 @@ export interface BitgetAccountStats {
   losingTrades: number
   winRate: number
   totalPnl: number
+  totalFees: number
+  netPnl: number
   roi: number
   currentBalance: number
   initialBalance: number

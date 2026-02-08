@@ -83,12 +83,14 @@ export function TradeHistory({ trades, isLoading }: TradeHistoryProps) {
       ) : (
         <>
           {/* Table Header */}
-          <div className="hidden md:grid grid-cols-6 gap-4 px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+          <div className="hidden md:grid grid-cols-8 gap-4 px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
             <div>Time</div>
             <div>Action</div>
             <div>Side</div>
-            <div className="text-right">Quantity</div>
+            <div className="text-right">Qty</div>
+            <div className="text-right">Price</div>
             <div className="text-right">P&L</div>
+            <div className="text-right">Fee</div>
             <div className="text-center">Status</div>
           </div>
 
@@ -102,7 +104,7 @@ export function TradeHistory({ trades, isLoading }: TradeHistoryProps) {
                   animate={{ opacity: 1, y: 0, backgroundColor: 'transparent' }}
                   exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="grid grid-cols-2 md:grid-cols-6 gap-2 md:gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  className="grid grid-cols-2 md:grid-cols-8 gap-2 md:gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                 >
                   {/* Time */}
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -132,15 +134,25 @@ export function TradeHistory({ trades, isLoading }: TradeHistoryProps) {
                     {trade.quantity} BTC
                   </div>
 
+                  {/* Price */}
+                  <div className="text-right text-sm font-mono text-gray-600 dark:text-gray-400">
+                    {trade.price ? `$${Number(trade.price).toLocaleString(undefined, { minimumFractionDigits: 1 })}` : '-'}
+                  </div>
+
                   {/* P&L */}
                   <div className={`text-right text-sm font-medium ${
-                    (trade.pnl || 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                    (trade.pnl || 0) > 0 ? 'text-emerald-600' : (trade.pnl || 0) < 0 ? 'text-rose-600' : 'text-gray-400'
                   }`}>
-                    {trade.position_status === 'CLOSED' ? (
-                      `${(trade.pnl || 0) >= 0 ? '+' : ''}$${(trade.pnl || 0).toFixed(2)}`
+                    {trade.pnl != null ? (
+                      `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}`
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
+                  </div>
+
+                  {/* Fee */}
+                  <div className="text-right text-xs font-mono text-orange-500">
+                    {(trade.fee || 0) > 0 ? `$${Number(trade.fee).toFixed(2)}` : '-'}
                   </div>
 
                   {/* Status */}

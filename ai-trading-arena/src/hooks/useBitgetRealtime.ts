@@ -20,22 +20,30 @@ export function useBitgetRealtime() {
 
   // Calculate stats from trades
   const calculateStats = useCallback((tradeList: BitgetTradeExecution[], accountConfig: BitgetAccountConfig | null): BitgetAccountStats => {
-    const closedTrades = tradeList.filter(t => t.position_status === 'CLOSED' && t.status === 'SUCCESS')
-    const winningTrades = closedTrades.filter(t => (t.pnl || 0) > 0).length
-    const losingTrades = closedTrades.filter(t => (t.pnl || 0) < 0).length
-    const totalPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+    // Only count CLOSE trades for PnL (they have the realized PnL)
+    const closeTrades = tradeList.filter(t => t.action.startsWith('CLOSE') && t.status === 'SUCCESS')
+    const winningTrades = closeTrades.filter(t => (t.pnl || 0) > 0).length
+    const losingTrades = closeTrades.filter(t => (t.pnl || 0) <= 0).length
+    const totalPnl = closeTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+
+    // Sum all fees from all successful trades (open + close)
+    const allSuccessful = tradeList.filter(t => t.status === 'SUCCESS')
+    const totalFees = allSuccessful.reduce((sum, t) => sum + (t.fee || 0), 0)
+    const netPnl = totalPnl - totalFees
 
     const initialBalance = accountConfig?.initial_balance || 10000
-    const currentBalance = initialBalance + totalPnl
+    const currentBalance = initialBalance + netPnl
     const roi = initialBalance > 0 ? ((currentBalance - initialBalance) / initialBalance) * 100 : 0
-    const winRate = closedTrades.length > 0 ? (winningTrades / closedTrades.length) * 100 : 0
+    const winRate = closeTrades.length > 0 ? (winningTrades / closeTrades.length) * 100 : 0
 
     return {
-      totalTrades: closedTrades.length,
+      totalTrades: closeTrades.length,
       winningTrades,
       losingTrades,
       winRate,
       totalPnl,
+      totalFees,
+      netPnl,
       roi,
       currentBalance,
       initialBalance
