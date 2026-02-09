@@ -507,6 +507,7 @@ export default function CommunityPage() {
   const pendingSuggestions = filteredSuggestions.filter(s => !s.status || s.status === 'pending')
   const reviewingSuggestions = filteredSuggestions.filter(s => s.status === 'reviewing' || s.status === 'testing')
   const approvedSuggestions = filteredSuggestions.filter(s => s.status === 'approved' || s.status === 'applied' || s.status === 'rejected')
+  const mySuggestions = user ? filteredSuggestions.filter(s => s.user_id === user.id) : []
 
   // Mock contributor data
   const topContributors: ContributorLeaderboardEntry[] = [
@@ -970,7 +971,7 @@ export default function CommunityPage() {
 
             {/* Suggestions List */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
                 <TabsTrigger value="pending" className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   Pending ({pendingSuggestions.length})
@@ -982,6 +983,10 @@ export default function CommunityPage() {
                 <TabsTrigger value="approved" className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Processed ({approvedSuggestions.length})
+                </TabsTrigger>
+                <TabsTrigger value="mine" className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Mine ({mySuggestions.length})
                 </TabsTrigger>
               </TabsList>
 
@@ -1038,6 +1043,33 @@ export default function CommunityPage() {
                 ) : (
                   <div className="space-y-3">
                     {approvedSuggestions.map((suggestion) => (
+                      <SuggestionCard
+                        key={suggestion.id}
+                        suggestion={suggestion}
+                        isLoggedIn={!!user}
+                        isAdmin={isAdmin}
+                        onAdminAction={refreshSuggestions}
+                        performance={performanceMap[suggestion.id] || null}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="mine">
+                {!user ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                    <p>Sign in to see your suggestions</p>
+                  </div>
+                ) : mySuggestions.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                    <p>You haven&apos;t submitted any suggestions yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {mySuggestions.map((suggestion) => (
                       <SuggestionCard
                         key={suggestion.id}
                         suggestion={suggestion}
