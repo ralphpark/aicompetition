@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Github, User, Menu, X } from 'lucide-react'
+import { User, Menu, X } from 'lucide-react'
 import { AuthButton } from '@/components/auth/AuthButton'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -60,14 +60,6 @@ export function Header() {
             <User className="w-5 h-5" />
           </Link>
           <ThemeToggle />
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors hidden sm:block"
-          >
-            <Github className="w-5 h-5" />
-          </a>
           <div className="hidden sm:block">
             <AuthButton />
           </div>

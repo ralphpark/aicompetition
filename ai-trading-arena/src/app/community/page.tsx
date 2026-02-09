@@ -7,7 +7,6 @@ import { ModelSelector } from '@/components/community/ModelSelector'
 import { InfoCard, type InfoItem } from '@/components/community/InfoCard'
 import { CategoryFilter, type CategoryType } from '@/components/community/CategoryFilter'
 import { SuggestionCard } from '@/components/community/SuggestionCard'
-import { ContributorLeaderboard } from '@/components/community/ContributorLeaderboard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,7 +33,7 @@ import {
   ChevronUp
 } from 'lucide-react'
 import Link from 'next/link'
-import type { ContributorLeaderboardEntry, SuggestionSection, SuggestionStatus } from '@/types/database'
+import type { SuggestionSection, SuggestionStatus } from '@/types/database'
 import { getIsAdmin } from '@/app/actions/suggestions'
 
 // Info card data definitions
@@ -509,12 +508,6 @@ export default function CommunityPage() {
   const approvedSuggestions = filteredSuggestions.filter(s => s.status === 'approved' || s.status === 'applied' || s.status === 'rejected')
   const mySuggestions = user ? filteredSuggestions.filter(s => s.user_id === user.id) : []
 
-  // Mock contributor data
-  const topContributors: ContributorLeaderboardEntry[] = [
-    { id: '1', nickname: 'TradingMaster', avatar_url: null, points: 2450, tier: 'gold', total_rewards: 125, approved_suggestions: 3, total_improvement: 5.2 },
-    { id: '2', nickname: 'CryptoSage', avatar_url: null, points: 1890, tier: 'silver', total_rewards: 75, approved_suggestions: 2, total_improvement: 3.1 },
-    { id: '3', nickname: 'AIWhisperer', avatar_url: null, points: 1200, tier: 'silver', total_rewards: 50, approved_suggestions: 1, total_improvement: 2.5 },
-  ]
 
   // Get pressure level based on rank
   const getPressureLevel = (rank: number): { label: string; color: string; icon: string } => {
@@ -1123,9 +1116,6 @@ export default function CommunityPage() {
                 View Hall of Fame
               </Link>
             </div>
-
-            {/* Top Contributors */}
-            <ContributorLeaderboard contributors={topContributors} />
 
             {/* Info Card */}
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
