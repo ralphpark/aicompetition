@@ -121,7 +121,7 @@ export function TransparencySection() {
                   href="/transparency"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-600 hover:border-gray-500 text-gray-300 font-medium rounded-lg transition-colors"
                 >
-                  Transparency Report
+                  How It All Works
                 </Link>
               </div>
             </div>
