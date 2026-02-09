@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { TrendingUp, TrendingDown, ExternalLink, Activity } from 'lucide-react'
+import { TrendingUp, TrendingDown, ExternalLink, Activity, Wallet } from 'lucide-react'
 import Link from 'next/link'
 import { MODEL_CHARACTERS } from '@/lib/constants/models'
 
@@ -162,7 +162,15 @@ export function LivePreviewSection() {
                       <div className="col-span-5 flex items-center gap-3">
                         <span className="text-2xl">{character.emoji}</span>
                         <div>
-                          <div className="text-white font-medium">{entry.model_name}</div>
+                          <div className="text-white font-medium flex items-center gap-2">
+                            {entry.model_name}
+                            {index === 0 && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-rose-500/20 border border-rose-500/30 rounded text-[10px] font-semibold text-rose-400 uppercase tracking-wider">
+                                <Wallet className="w-2.5 h-2.5" />
+                                Real Trading
+                              </span>
+                            )}
+                          </div>
                           <div className={`text-xs ${character.color}`}>{character.provider}</div>
                         </div>
                       </div>
@@ -186,6 +194,13 @@ export function LivePreviewSection() {
                 })}
               </div>
             )}
+
+            {/* Champion Info */}
+            <div className="px-6 py-3 bg-rose-500/5 border-t border-rose-500/20">
+              <p className="text-center text-xs text-rose-400/80">
+                The #1 ranked champion&apos;s decisions are automatically executed as real trades on Bitget
+              </p>
+            </div>
 
             {/* Footer */}
             <div className="px-6 py-4 bg-gray-800/30 border-t border-gray-700">

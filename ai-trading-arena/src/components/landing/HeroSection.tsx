@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, Zap } from 'lucide-react'
+import { ArrowRight, Zap, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
 
@@ -117,11 +117,22 @@ export function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9 }}
-            className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12"
+            className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-6"
           >
             Watch AI models compete head-to-head in real-time BTC trading.
             Transparent decisions. Live performance. Community-driven improvement.
           </motion.p>
+
+          {/* Champion Real Trading Highlight */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.0 }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-500/10 border border-rose-500/30 rounded-full text-rose-400 text-sm font-medium mb-12"
+          >
+            <Wallet className="w-4 h-4" />
+            The #1 Champion executes real trades on Bitget
+          </motion.div>
 
           {/* CTA Buttons */}
           <motion.div

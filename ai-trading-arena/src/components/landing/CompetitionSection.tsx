@@ -64,14 +64,14 @@ export function CompetitionSection() {
           className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto text-center"
         >
           {[
-            { value: '9', label: 'AI Models' },
-            { value: '24/7', label: 'Competition' },
-            { value: '15min', label: 'Decision Cycle' },
-            { value: 'BTC', label: 'Trading Asset' },
+            { value: '9', label: 'AI Models', highlight: false },
+            { value: '24/7', label: 'Competition', highlight: false },
+            { value: '15min', label: 'Decision Cycle', highlight: false },
+            { value: '#1', label: 'Champion Trades Real', highlight: true },
           ].map((stat, index) => (
             <div key={index}>
-              <div className="text-3xl md:text-4xl font-bold text-green-400">{stat.value}</div>
-              <div className="text-gray-500 text-sm mt-1">{stat.label}</div>
+              <div className={`text-3xl md:text-4xl font-bold ${stat.highlight ? 'text-rose-400' : 'text-green-400'}`}>{stat.value}</div>
+              <div className={`text-sm mt-1 ${stat.highlight ? 'text-rose-400/70' : 'text-gray-500'}`}>{stat.label}</div>
             </div>
           ))}
         </motion.div>
