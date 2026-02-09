@@ -137,7 +137,7 @@ export function HeroSection() {
               </Button>
             </Link>
             <Link href="/community">
-              <Button size="lg" variant="outline" className="border-gray-600 text-white hover:bg-gray-800 px-8 py-6 text-lg">
+              <Button size="lg" className="bg-gray-800 text-white border border-gray-600 hover:bg-gray-700 px-8 py-6 text-lg">
                 <Zap className="mr-2 w-5 h-5" />
                 Join Community
               </Button>
