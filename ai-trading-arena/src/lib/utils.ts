@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Hydration-safe date formatting (avoids locale mismatch between server/client)
+// Hydration-safe date formatting (uses UTC to avoid server/client timezone mismatch)
 export function formatDate(date: string | Date, options?: {
   showTime?: boolean
   showYear?: boolean
@@ -13,11 +13,11 @@ export function formatDate(date: string | Date, options?: {
   const d = new Date(date)
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-  const month = months[d.getMonth()]
-  const day = d.getDate()
-  const year = d.getFullYear()
-  const hours = d.getHours().toString().padStart(2, '0')
-  const minutes = d.getMinutes().toString().padStart(2, '0')
+  const month = months[d.getUTCMonth()]
+  const day = d.getUTCDate()
+  const year = d.getUTCFullYear()
+  const hours = d.getUTCHours().toString().padStart(2, '0')
+  const minutes = d.getUTCMinutes().toString().padStart(2, '0')
 
   let result = `${month} ${day}`
   if (options?.showYear) {
@@ -31,6 +31,8 @@ export function formatDate(date: string | Date, options?: {
 }
 
 // Format relative time (e.g., "2h ago")
+// Note: This uses Date.now() which can differ between server/client.
+// Only use in client-only contexts or with suppressHydrationWarning.
 export function formatTimeAgo(date: string | Date): string {
   const d = new Date(date)
   const now = new Date()
