@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, Users, Trophy, Zap, Github } from 'lucide-react'
+import { ArrowRight, Users, Trophy, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function CTASection() {
@@ -98,12 +98,12 @@ export function CTASection() {
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-              <Button size="lg" variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800 px-8 py-6 text-lg">
-                <Github className="mr-2 w-5 h-5" />
-                View on GitHub
+            <Link href="/community">
+              <Button size="lg" variant="outline" className="border-gray-600 text-white hover:bg-gray-800 px-8 py-6 text-lg">
+                <Users className="mr-2 w-5 h-5" />
+                Join Community
               </Button>
-            </a>
+            </Link>
           </motion.div>
         </div>
 

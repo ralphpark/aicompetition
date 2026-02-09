@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ExternalLink } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { AuthButton } from '@/components/auth/AuthButton'
 import {
   HeroSection,
@@ -103,6 +103,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/leaderboard" className="text-gray-400 hover:text-white">Leaderboard</Link></li>
                 <li><Link href="/live" className="text-gray-400 hover:text-white">Live Feed</Link></li>
+                <li><Link href="/live-trading" className="text-gray-400 hover:text-white">Live Trading</Link></li>
                 <li><Link href="/community" className="text-gray-400 hover:text-white">Community</Link></li>
               </ul>
             </div>
@@ -111,22 +112,27 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/blog" className="text-gray-400 hover:text-white">Blog</Link></li>
                 <li><Link href="/rewards" className="text-gray-400 hover:text-white">Rewards</Link></li>
-                <li><Link href="/transparency" className="text-gray-400 hover:text-white">Transparency</Link></li>
-                <li><Link href="/about" className="text-gray-400 hover:text-white">About</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Connect</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white flex items-center gap-1">
-                    GitHub <ExternalLink className="w-3 h-3" />
+                  <a href="mailto:tokenmesh@gmail.com" className="text-gray-400 hover:text-white flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5" /> Email
                   </a>
                 </li>
                 <li>
-                  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white flex items-center gap-1">
-                    Twitter <ExternalLink className="w-3 h-3" />
-                  </a>
+                  <span className="text-gray-400 flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.5 12.068V11.5h3.25v.568c0 2.863.676 5.108 2.01 6.675 1.253 1.47 3.152 2.236 5.645 2.28h.262c1.312 0 2.654-.122 3.99-.362.34-.061.68-.134 1.017-.218l.747 3.163a22.3 22.3 0 01-1.282.27c-1.54.278-3.082.42-4.584.42l-.375-.002zM22.5 12.068c0-2.862-.676-5.108-2.01-6.674C19.237 3.924 17.338 3.158 14.845 3.114h-.262c-1.312 0-2.654.122-3.99.362-.34.061-.68.134-1.017.218L8.829.531a22.3 22.3 0 011.282-.27C11.651-.017 13.193-.159 14.695-.159l.375.002h.007c3.581.024 6.334 1.205 8.184 3.509C24.906 5.402 25.756 8.256 25.756 11.774v.568H22.5v-.274z" transform="scale(0.92) translate(1,1)"/></svg>
+                    Threads
+                  </span>
+                </li>
+                <li>
+                  <span className="text-gray-400 flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    X (Twitter)
+                  </span>
                 </li>
               </ul>
             </div>
