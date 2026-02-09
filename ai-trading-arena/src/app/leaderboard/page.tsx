@@ -134,9 +134,9 @@ export default function LeaderboardPage() {
       'deepseek': 'bg-cyan-500',
       'mistral': 'bg-purple-500',
       'xai': 'bg-gray-700',
-      'groq': 'bg-pink-500',
-      'openrouter': 'bg-indigo-500',
-      'perplexity': 'bg-teal-500',
+      'moonshot ai': 'bg-red-500',
+      'alibaba': 'bg-amber-500',
+      'xiaomi': 'bg-pink-500',
     }
     return colors[provider.toLowerCase()] || 'bg-gray-500'
   }
@@ -562,7 +562,7 @@ export default function LeaderboardPage() {
               <h3 className="font-semibold">9 AI Models</h3>
             </div>
             <p className="text-sm text-gray-500">
-              GPT, Claude, Gemini, DeepSeek, Mistral, Groq competing 24/7
+              GPT, Claude, Gemini, DeepSeek, Mistral and more competing 24/7
             </p>
             <div className="mt-3 flex flex-wrap gap-1">
               {MODEL_CHARACTERS.slice(0, 5).map(m => (

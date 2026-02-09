@@ -7,14 +7,10 @@ import { ArrowLeft, History, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ id: string }>
-}
-
-export async function generateStaticParams() {
-  return MODEL_CHARACTERS.map((model) => ({
-    id: model.id,
-  }))
 }
 
 export default async function ModelDetailPage({ params }: PageProps) {
@@ -50,8 +46,8 @@ export default async function ModelDetailPage({ params }: PageProps) {
   const character = getModelCharacter(id)
 
   const stats = {
-    current_balance: portfolio?.current_balance || 10000,
-    initial_balance: portfolio?.initial_balance || 10000,
+    current_balance: portfolio?.current_balance ?? 10000,
+    initial_balance: portfolio?.initial_balance ?? 10000,
     total_trades: portfolio?.total_trades || 0,
     winning_trades: portfolio?.winning_trades || 0,
     roi_percent: portfolio ? ((portfolio.current_balance - portfolio.initial_balance) / portfolio.initial_balance) * 100 : 0,

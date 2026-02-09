@@ -19,6 +19,7 @@ export function LivePreviewSection() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const [stats, setStats] = useState({ activeModels: 9, decisionsToday: 0, totalTrades: 0, avgWinRate: 0 })
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -38,6 +39,23 @@ export function LivePreviewSection() {
           .limit(5)
 
         if (error) throw error
+
+        // Fetch live stats in parallel
+        const today = new Date().toISOString().split('T')[0]
+        const [modelsRes, decisionsRes, allPortfoliosRes] = await Promise.all([
+          supabase.from('ai_models').select('id', { count: 'exact', head: true }).eq('is_active', true),
+          supabase.from('ai_decisions').select('id', { count: 'exact', head: true }).gte('created_at', today),
+          supabase.from('virtual_portfolios').select('total_trades, winning_trades'),
+        ])
+
+        const totalTrades = allPortfoliosRes.data?.reduce((sum, p) => sum + (Number(p.total_trades) || 0), 0) || 0
+        const totalWins = allPortfoliosRes.data?.reduce((sum, p) => sum + (Number(p.winning_trades) || 0), 0) || 0
+        setStats({
+          activeModels: modelsRes.count || 9,
+          decisionsToday: decisionsRes.count || 0,
+          totalTrades,
+          avgWinRate: totalTrades > 0 ? Math.round((totalWins / totalTrades) * 100) : 0,
+        })
 
         const formatted = data?.map(item => ({
           model_id: item.model_id,
@@ -223,10 +241,10 @@ export function LivePreviewSection() {
           className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mt-12"
         >
           {[
-            { label: 'Active Models', value: '9' },
-            { label: 'Decisions Today', value: '96+' },
-            { label: 'Total Trades', value: '1,200+' },
-            { label: 'Uptime', value: '99.9%' },
+            { label: 'Active Models', value: String(stats.activeModels) },
+            { label: 'Decisions Today', value: stats.decisionsToday.toLocaleString() },
+            { label: 'Total Trades', value: stats.totalTrades.toLocaleString() },
+            { label: 'Avg Win Rate', value: `${stats.avgWinRate}%` },
           ].map((stat, index) => (
             <div key={stat.label} className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>

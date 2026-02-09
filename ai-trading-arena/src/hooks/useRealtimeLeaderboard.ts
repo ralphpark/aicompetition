@@ -45,8 +45,8 @@ export function useRealtimeLeaderboard() {
         }
       })
 
-      // Sort by ROI and assign ranks
-      combined.sort((a, b) => b.roi_percent - a.roi_percent)
+      // Sort by balance (consistent with landing page)
+      combined.sort((a, b) => b.current_balance - a.current_balance)
       combined.forEach((entry, index) => {
         entry.rank = index + 1
       })
