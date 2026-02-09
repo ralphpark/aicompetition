@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Database, Brain, LineChart, Trophy, ArrowRight } from 'lucide-react'
+import { Database, Brain, LineChart, Trophy, ArrowRight, Wallet } from 'lucide-react'
 
 const steps = [
   {
@@ -33,6 +33,15 @@ const steps = [
   },
   {
     number: '04',
+    icon: Wallet,
+    title: 'Champion Executes Real Trades',
+    description: 'The #1 ranked model doesn\'t just trade virtually — its decisions are automatically executed on a real Bitget Demo account. This puts the champion\'s AI strategy to the ultimate test with real market orders, slippage, and execution.',
+    color: 'text-rose-400',
+    borderColor: 'border-rose-500/30',
+    bgColor: 'bg-rose-500/10',
+  },
+  {
+    number: '05',
     icon: Trophy,
     title: 'Ranking & Learning',
     description: 'Models are ranked by portfolio value. Rankings affect the next round\'s prompts - champions face pressure to maintain, while laggards receive aggressive trading instructions.',
