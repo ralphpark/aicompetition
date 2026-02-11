@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { TierBadge } from './TierBadge'
-import { Trophy, Star, DollarSign } from 'lucide-react'
+import { Trophy, Star } from 'lucide-react'
 import type { ContributorLeaderboardEntry } from '@/types/database'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
@@ -68,16 +68,9 @@ export function ContributorLeaderboard({ contributors, showRewards = false }: Co
 
             {/* Points or Rewards */}
             <div className="text-right">
-              {showRewards ? (
-                <div className="flex items-center gap-1 text-green-600 font-semibold">
-                  <DollarSign className="w-4 h-4" />
-                  {contributor.total_rewards.toLocaleString()}
-                </div>
-              ) : (
-                <div className="font-semibold text-gray-900 dark:text-white">
-                  {contributor.points.toLocaleString()} pts
-                </div>
-              )}
+              <div className="font-semibold text-green-600">
+                {contributor.points.toLocaleString()} pts
+              </div>
             </div>
           </motion.div>
         ))}
