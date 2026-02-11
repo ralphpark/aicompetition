@@ -1,10 +1,13 @@
 -- ============================================
 -- Auto-populate virtual_positions fields from ai_decisions
--- Trigger: on INSERT copies confidence + invalidation fields
+-- Trigger: on INSERT copies confidence + invalidation + position_size
 -- Applied: 2026-02-11
+-- Fixed: 2026-02-11 - RECORD type bug → individual scalar variables
+--   Root cause: SELECT INTO RECORD + IS NULL check failed silently
+--   Also added: position_size enforcement from ai_decisions
+--   Also added: Block incomplete decisions (position_size=0 or entry_price=null)
 -- ============================================
 
--- Trigger function: auto-populate confidence and invalidation fields
 CREATE OR REPLACE FUNCTION public.auto_populate_position_fields()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -12,20 +15,31 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_decision RECORD;
+  v_confidence NUMERIC;
+  v_inv_type VARCHAR;
+  v_inv_value NUMERIC;
+  v_inv_desc TEXT;
+  v_pos_size NUMERIC;
+  v_entry_price NUMERIC;
 BEGIN
-  -- Strategy 1: Use decision_id FK if available
+  -- ============================================
+  -- Phase 1: Lookup ai_decision data
+  -- ============================================
   IF NEW.decision_id IS NOT NULL THEN
-    SELECT confidence, invalidation_type, invalidation_value, invalidation_description
-    INTO v_decision
+    SELECT confidence, invalidation_type, invalidation_value, invalidation_description,
+           position_size, entry_price
+    INTO v_confidence, v_inv_type, v_inv_value, v_inv_desc,
+         v_pos_size, v_entry_price
     FROM public.ai_decisions
     WHERE id = NEW.decision_id;
   END IF;
 
-  -- Strategy 2: Fallback to time-based matching if no decision_id or no result
-  IF v_decision IS NULL OR v_decision.confidence IS NULL THEN
-    SELECT confidence, invalidation_type, invalidation_value, invalidation_description
-    INTO v_decision
+  -- Strategy 2: Fallback to time-based matching
+  IF NOT FOUND OR v_confidence IS NULL THEN
+    SELECT confidence, invalidation_type, invalidation_value, invalidation_description,
+           position_size, entry_price
+    INTO v_confidence, v_inv_type, v_inv_value, v_inv_desc,
+         v_pos_size, v_entry_price
     FROM public.ai_decisions
     WHERE model_id = NEW.model_id
       AND action IN ('OPEN_LONG', 'OPEN_SHORT')
@@ -34,31 +48,45 @@ BEGIN
     LIMIT 1;
   END IF;
 
-  -- Populate fields if we found a matching decision
-  IF v_decision IS NOT NULL THEN
-    -- Confidence
-    IF NEW.confidence_at_entry IS NULL AND v_decision.confidence IS NOT NULL THEN
-      NEW.confidence_at_entry := v_decision.confidence;
-      -- Calculate position multiplier based on confidence
-      -- <40: 0.5x (low), 40-60: 0.75x (medium), 60-80: 1.0x (standard), >80: 1.25x (high)
-      NEW.confidence_position_multiplier := CASE
-        WHEN v_decision.confidence < 40 THEN 0.50
-        WHEN v_decision.confidence < 60 THEN 0.75
-        WHEN v_decision.confidence < 80 THEN 1.00
-        ELSE 1.25
-      END;
-    END IF;
+  -- ============================================
+  -- Phase 2: Block incomplete decisions
+  -- position_size=0 or entry_price=null → reject INSERT
+  -- ============================================
+  IF v_pos_size IS NOT NULL AND v_pos_size = 0 THEN
+    RETURN NULL;  -- silently reject: AI recommended no position
+  END IF;
+  IF v_entry_price IS NULL AND v_pos_size IS NOT NULL THEN
+    RETURN NULL;  -- silently reject: no entry price provided
+  END IF;
 
-    -- Invalidation fields
-    IF NEW.invalidation_type IS NULL AND v_decision.invalidation_type IS NOT NULL THEN
-      NEW.invalidation_type := v_decision.invalidation_type;
-    END IF;
-    IF NEW.invalidation_value IS NULL AND v_decision.invalidation_value IS NOT NULL THEN
-      NEW.invalidation_value := v_decision.invalidation_value;
-    END IF;
-    IF NEW.invalidation_description IS NULL AND v_decision.invalidation_description IS NOT NULL THEN
-      NEW.invalidation_description := v_decision.invalidation_description;
-    END IF;
+  -- ============================================
+  -- Phase 3: Populate confidence + invalidation
+  -- ============================================
+  IF NEW.confidence_at_entry IS NULL AND v_confidence IS NOT NULL THEN
+    NEW.confidence_at_entry := v_confidence;
+    NEW.confidence_position_multiplier := CASE
+      WHEN v_confidence < 40 THEN 0.50
+      WHEN v_confidence < 60 THEN 0.75
+      WHEN v_confidence < 80 THEN 1.00
+      ELSE 1.25
+    END;
+  END IF;
+
+  IF NEW.invalidation_type IS NULL AND v_inv_type IS NOT NULL THEN
+    NEW.invalidation_type := v_inv_type;
+  END IF;
+  IF NEW.invalidation_value IS NULL AND v_inv_value IS NOT NULL THEN
+    NEW.invalidation_value := v_inv_value;
+  END IF;
+  IF NEW.invalidation_description IS NULL AND v_inv_desc IS NOT NULL THEN
+    NEW.invalidation_description := v_inv_desc;
+  END IF;
+
+  -- ============================================
+  -- Phase 4: Enforce dynamic position sizing
+  -- ============================================
+  IF v_pos_size IS NOT NULL AND v_pos_size > 0 THEN
+    NEW.quantity := v_pos_size;
   END IF;
 
   RETURN NEW;
