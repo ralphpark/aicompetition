@@ -145,6 +145,35 @@ export default async function ModelDetailPage({ params }: PageProps) {
                 </p>
               </div>
             </div>
+            {/* Exit Plan / Invalidation */}
+            {(currentPosition.invalidation_type || currentPosition.confidence_at_entry) && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {currentPosition.confidence_at_entry && (
+                  <div>
+                    <p className="text-sm text-gray-500">Confidence at Entry</p>
+                    <p className="font-mono font-bold">{currentPosition.confidence_at_entry}%</p>
+                  </div>
+                )}
+                {currentPosition.invalidation_type && (
+                  <div>
+                    <p className="text-sm text-gray-500">Invalidation Type</p>
+                    <p className="font-semibold text-amber-600">{currentPosition.invalidation_type}</p>
+                  </div>
+                )}
+                {currentPosition.invalidation_value && (
+                  <div>
+                    <p className="text-sm text-gray-500">Invalidation Price</p>
+                    <p className="font-mono font-bold text-amber-600">${currentPosition.invalidation_value?.toLocaleString()}</p>
+                  </div>
+                )}
+                {currentPosition.invalidation_description && (
+                  <div className="md:col-span-1">
+                    <p className="text-sm text-gray-500">Exit Condition</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{currentPosition.invalidation_description}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

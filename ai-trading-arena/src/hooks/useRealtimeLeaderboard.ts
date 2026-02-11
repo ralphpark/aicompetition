@@ -21,6 +21,10 @@ export function useRealtimeLeaderboard() {
       .from('virtual_portfolios')
       .select('*')
 
+    const { data: tradingStats } = await supabase
+      .from('model_trading_stats')
+      .select('*')
+
     if (models && portfolios) {
       const combined = models.map(model => {
         const portfolio = portfolios.find(p => p.model_id === model.id)
@@ -30,6 +34,7 @@ export function useRealtimeLeaderboard() {
         const totalTrades = portfolio?.total_trades || 0
         const winningTrades = portfolio?.winning_trades || 0
         const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0
+        const stats = tradingStats?.find(s => s.model_id === model.id)
 
         return {
           id: model.id,
@@ -41,6 +46,11 @@ export function useRealtimeLeaderboard() {
           total_trades: totalTrades,
           winning_trades: winningTrades,
           win_rate: winRate,
+          avg_pnl_per_trade: stats?.avg_pnl_per_trade || 0,
+          trades_per_day: stats?.trades_per_day || 0,
+          tp_hit_rate: stats?.tp_hit_rate || 0,
+          sl_hit_rate: stats?.sl_hit_rate || 0,
+          avg_confidence: stats?.avg_confidence || 0,
           rank: 0
         }
       })

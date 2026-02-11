@@ -318,6 +318,19 @@ export default function LeaderboardPage() {
                           <p className="text-xs text-gray-500">Trades</p>
                           <p className="font-mono">{entry.total_trades}</p>
                         </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">Avg PnL</p>
+                          <p className={cn(
+                            "font-mono text-sm",
+                            (entry.avg_pnl_per_trade || 0) >= 0 ? "text-green-600" : "text-red-600"
+                          )}>
+                            ${(entry.avg_pnl_per_trade || 0).toFixed(1)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">TP Rate</p>
+                          <p className="font-mono text-sm">{(entry.tp_hit_rate || 0).toFixed(0)}%</p>
+                        </div>
                       </div>
 
                       {/* Mini Decision Feed (hover) */}

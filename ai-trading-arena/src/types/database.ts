@@ -35,6 +35,12 @@ export interface VirtualPosition {
   pnl: number
   opened_at: string
   closed_at: string | null
+  confidence_at_entry: number | null
+  confidence_position_multiplier: number | null
+  invalidation_type: string | null
+  invalidation_value: number | null
+  invalidation_description: string | null
+  close_reason: string | null
 }
 
 export interface AIDecision {
@@ -49,6 +55,10 @@ export interface AIDecision {
   take_profit: number | null
   execution_status?: 'executed' | 'blocked' | 'pending'
   block_reason?: string | null
+  invalidation_type?: string | null
+  invalidation_value?: number | null
+  invalidation_description?: string | null
+  position_size_pct?: number | null
   created_at: string
 }
 
@@ -64,6 +74,11 @@ export interface LeaderboardEntry {
   win_rate: number
   rank: number
   updated_at?: string
+  avg_pnl_per_trade?: number
+  trades_per_day?: number
+  tp_hit_rate?: number
+  sl_hit_rate?: number
+  avg_confidence?: number
 }
 
 export interface RecentDecisionView extends AIDecision {

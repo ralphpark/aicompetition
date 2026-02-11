@@ -221,6 +221,36 @@ export function DecisionCard({ decision, showModel = true }: DecisionCardProps) 
             </div>
           )}
 
+          {/* Exit Plan / Invalidation */}
+          {(decision.action === 'OPEN_LONG' || decision.action === 'OPEN_SHORT') &&
+           (decision.invalidation_type || decision.invalidation_description) && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 mb-4 border border-amber-200 dark:border-amber-800">
+              <div className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">
+                Exit Plan
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                {decision.invalidation_type && (
+                  <div>
+                    <span className="text-gray-500 text-xs">Type</span>
+                    <p className="font-medium text-amber-700 dark:text-amber-300">{decision.invalidation_type}</p>
+                  </div>
+                )}
+                {decision.invalidation_value && (
+                  <div>
+                    <span className="text-gray-500 text-xs">Price</span>
+                    <p className="font-mono font-medium text-amber-700 dark:text-amber-300">${decision.invalidation_value.toLocaleString()}</p>
+                  </div>
+                )}
+                {decision.invalidation_description && (
+                  <div className="col-span-3">
+                    <span className="text-gray-500 text-xs">Condition</span>
+                    <p className="text-gray-700 dark:text-gray-300">{decision.invalidation_description}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Reasoning */}
           {decision.reasoning && (
             <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border dark:border-gray-700">
