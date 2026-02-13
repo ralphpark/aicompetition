@@ -1,6 +1,7 @@
 -- Migration: enforce_sl_tp_minimum_distance
 -- Date: 2026-02-11
--- Purpose: Enforce minimum 0.5% distance between entry_price and SL/TP on virtual_positions
+-- Purpose: Enforce minimum 0.8% distance between entry_price and SL/TP on virtual_positions
+-- Updated: 2026-02-12 - Changed threshold from 0.5% to 0.8%
 -- This prevents Bitget 400 errors when SL is too close to mark price
 -- Single source of truth: all downstream workflows (WF04, WF04b) read corrected values
 
@@ -22,14 +23,14 @@ BEGIN
     -- === STOP LOSS CORRECTION ===
     IF NEW.stop_loss IS NOT NULL THEN
       IF NEW.side = 'LONG' THEN
-        -- LONG: SL must be at least 0.5% below entry
-        IF NEW.stop_loss > NEW.entry_price * 0.995 THEN
-          NEW.stop_loss := ROUND(NEW.entry_price * 0.995, 2);
+        -- LONG: SL must be at least 0.8% below entry
+        IF NEW.stop_loss > NEW.entry_price * 0.992 THEN
+          NEW.stop_loss := ROUND(NEW.entry_price * 0.992, 2);
         END IF;
       ELSIF NEW.side = 'SHORT' THEN
-        -- SHORT: SL must be at least 0.5% above entry
-        IF NEW.stop_loss < NEW.entry_price * 1.005 THEN
-          NEW.stop_loss := ROUND(NEW.entry_price * 1.005, 2);
+        -- SHORT: SL must be at least 0.8% above entry
+        IF NEW.stop_loss < NEW.entry_price * 1.008 THEN
+          NEW.stop_loss := ROUND(NEW.entry_price * 1.008, 2);
         END IF;
       END IF;
     END IF;
@@ -37,14 +38,14 @@ BEGIN
     -- === TAKE PROFIT CORRECTION ===
     IF NEW.take_profit IS NOT NULL THEN
       IF NEW.side = 'LONG' THEN
-        -- LONG: TP must be at least 0.5% above entry
-        IF NEW.take_profit < NEW.entry_price * 1.005 THEN
-          NEW.take_profit := ROUND(NEW.entry_price * 1.005, 2);
+        -- LONG: TP must be at least 0.8% above entry
+        IF NEW.take_profit < NEW.entry_price * 1.008 THEN
+          NEW.take_profit := ROUND(NEW.entry_price * 1.008, 2);
         END IF;
       ELSIF NEW.side = 'SHORT' THEN
-        -- SHORT: TP must be at least 0.5% below entry
-        IF NEW.take_profit > NEW.entry_price * 0.995 THEN
-          NEW.take_profit := ROUND(NEW.entry_price * 0.995, 2);
+        -- SHORT: TP must be at least 0.8% below entry
+        IF NEW.take_profit > NEW.entry_price * 0.992 THEN
+          NEW.take_profit := ROUND(NEW.entry_price * 0.992, 2);
         END IF;
       END IF;
     END IF;

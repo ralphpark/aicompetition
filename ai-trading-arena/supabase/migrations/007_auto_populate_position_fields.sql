@@ -6,6 +6,12 @@
 --   Root cause: SELECT INTO RECORD + IS NULL check failed silently
 --   Also added: position_size enforcement from ai_decisions
 --   Also added: Block incomplete decisions (position_size=0 or entry_price=null)
+-- Fixed: 2026-02-12 - Added Phase 5: minimum quantity fallback (0.02)
+--   Covers case where ai_decision not found and v_pos_size stays NULL
+-- Fixed: 2026-02-12 - Phase 4 no longer overwrites WF03's risk-calculated quantity
+--   Root cause: WF03 calculates ATR/volatility/confidence-based sizing, but trigger
+--   unconditionally replaced it with AI's raw position_size (always 0.02 for DeepSeek)
+--   Now Phase 4 only applies when WF03 didn't set quantity (NULL/0)
 -- ============================================
 
 CREATE OR REPLACE FUNCTION public.auto_populate_position_fields()
@@ -83,10 +89,20 @@ BEGIN
   END IF;
 
   -- ============================================
-  -- Phase 4: Enforce dynamic position sizing
+  -- Phase 4: Fallback position sizing (only if WF03 didn't set quantity)
+  -- WF03 calculates risk-based sizing (ATR, volatility, confidence, counter-trend)
+  -- and sets quantity before INSERT. We only override if WF03 left it NULL/0.
   -- ============================================
-  IF v_pos_size IS NOT NULL AND v_pos_size > 0 THEN
+  IF (NEW.quantity IS NULL OR NEW.quantity <= 0) AND v_pos_size IS NOT NULL AND v_pos_size > 0 THEN
     NEW.quantity := v_pos_size;
+  END IF;
+
+  -- ============================================
+  -- Phase 5: Minimum quantity fallback
+  -- If quantity is still NULL or <= 0 after all phases, set minimum
+  -- ============================================
+  IF NEW.quantity IS NULL OR NEW.quantity <= 0 THEN
+    NEW.quantity := 0.02;
   END IF;
 
   RETURN NEW;

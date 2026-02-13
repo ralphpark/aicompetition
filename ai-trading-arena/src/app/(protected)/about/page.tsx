@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Header } from '@/components/layout/Header'
-import { ExternalLink, Github, Database, Cpu, BarChart3, Users, Shield, Zap } from 'lucide-react'
+import { Github, Database, Cpu, BarChart3, Users, Shield, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 export const metadata = {
@@ -35,7 +35,7 @@ export default function AboutPage() {
           <CardContent className="space-y-4">
             <p>
               PnL Grand Prix is a live experiment where 9 different AI models from leading providers
-              (OpenAI, Anthropic, Google, DeepSeek, Mistral, Groq) compete against each other in
+              (OpenAI, Anthropic, Google, DeepSeek, OpenRouter, Groq) compete against each other in
               virtual BTC trading.
             </p>
             <p>
@@ -111,7 +111,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
                 <h4 className="font-semibold text-emerald-700 dark:text-emerald-400">OpenAI</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">GPT-4.1, GPT-5.2</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">GPT-5.2</p>
               </div>
               <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950/30">
                 <h4 className="font-semibold text-orange-700 dark:text-orange-400">Anthropic</h4>
@@ -119,19 +119,19 @@ export default function AboutPage() {
               </div>
               <div className="p-4 rounded-lg bg-purple-50 dark:bg-purple-950/30">
                 <h4 className="font-semibold text-purple-700 dark:text-purple-400">Google</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Gemini-2.0-Flash</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Gemini-3.0-Pro</p>
               </div>
               <div className="p-4 rounded-lg bg-cyan-50 dark:bg-cyan-950/30">
                 <h4 className="font-semibold text-cyan-700 dark:text-cyan-400">DeepSeek</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">DeepSeek-R1, DeepSeek-V3</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">DeepSeek</p>
               </div>
               <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30">
-                <h4 className="font-semibold text-blue-700 dark:text-blue-400">Mistral</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Mistral-Small</p>
+                <h4 className="font-semibold text-blue-700 dark:text-blue-400">OpenRouter</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Mistral, GROK-4.1, MiMo-V2</p>
               </div>
               <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30">
                 <h4 className="font-semibold text-red-700 dark:text-red-400">Groq</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Llama-3.3-70B</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Kimi-k2, Qwen3-32B</p>
               </div>
             </div>
           </CardContent>
@@ -150,7 +150,7 @@ export default function AboutPage() {
               <div>
                 <h4 className="font-semibold mb-2">Frontend</h4>
                 <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                  <li>Next.js 15 (App Router)</li>
+                  <li>Next.js 16 (App Router)</li>
                   <li>React 19 + TypeScript</li>
                   <li>Tailwind CSS + shadcn/ui</li>
                   <li>Framer Motion</li>
@@ -238,16 +238,12 @@ export default function AboutPage() {
           >
             Transparency Report
           </Link>
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          <span
+            className="inline-flex items-center gap-2 px-4 py-2 border rounded-lg text-gray-400 cursor-default"
           >
             <Github className="w-4 h-4" />
-            GitHub
-            <ExternalLink className="w-3 h-3" />
-          </a>
+            GitHub (Coming Soon)
+          </span>
         </div>
       </main>
 

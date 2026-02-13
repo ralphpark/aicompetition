@@ -14,6 +14,7 @@ import { RewardSummary } from '@/components/rewards/RewardSummary'
 import { TIER_CONFIG, SECTION_LABELS, POINT_VALUES } from '@/types/database'
 import type { UserTier, SuggestionStatus, SuggestionSection, PointReason, RewardStatus } from '@/types/database'
 import { formatDate } from '@/lib/utils'
+import { PasswordChangeForm } from '@/components/auth/PasswordChangeForm'
 import {
   Trophy,
   Coins,
@@ -21,7 +22,8 @@ import {
   ThumbsUp,
   Clock,
   Edit3,
-  Loader2
+  Loader2,
+  Settings
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -311,11 +313,12 @@ export default function ProfilePage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-xl">
+          <TabsList className="grid grid-cols-5 w-full max-w-2xl">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
             <TabsTrigger value="rewards">Rewards</TabsTrigger>
             <TabsTrigger value="points">Points</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -629,6 +632,11 @@ export default function ProfilePage() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <PasswordChangeForm />
           </TabsContent>
         </Tabs>
       </main>

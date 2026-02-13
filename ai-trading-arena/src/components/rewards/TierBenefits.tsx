@@ -174,7 +174,7 @@ export function TierBenefits({ currentTier = 'bronze', currentPoints = 0 }: Tier
           </p>
           {currentTierIndex >= 1 ? (
             <a
-              href="https://t.me/+YOUR_TELEGRAM_INVITE_LINK"
+              href="#" /* TODO: Replace with actual Telegram invite link */
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium"
